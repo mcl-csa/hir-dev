@@ -1,10 +1,10 @@
 set script_path [ file dirname [ file normalize [ info script ] ] ]
 puts $script_path
-#set cpp_path file join script_path "convolution.cpp"
 
 file mkdir ../build
 cd ../build
-open_project prj_convolution
+
+open_project convolution
 set_top convolution
 add_files $script_path/convolution.cpp
 open_solution "solution1"

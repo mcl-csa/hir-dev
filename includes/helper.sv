@@ -2,12 +2,12 @@
 `ifndef HIR_HELPER
   `define HIR_HELPER
 
-  module i32mult_dsp48(a, b, p, tstart, clk);
-    input[32 - 1 : 0] a; 
-    input[32 - 1 : 0] b; 
-    output[32 - 1 : 0] p;//2 cycle delay.
-    input tstart;
-    input clk;
+  module i32mult_dsp48(p, a, b, tstart, clk);
+    output wire[32 - 1 : 0] p;//2 cycle delay.
+    input wire[32 - 1 : 0] a; 
+    input wire[32 - 1 : 0] b; 
+    input wire tstart;
+    input wire clk;
 
     reg signed [32 - 1 : 0] a_reg0;
     reg signed [32 - 1 : 0] b_reg0;

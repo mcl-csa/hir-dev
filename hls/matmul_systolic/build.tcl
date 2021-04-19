@@ -1,11 +1,12 @@
-############################################################
-## This file is generated automatically by Vivado HLS.
-## Please DO NOT edit it.
-## Copyright (C) 1986-2019 Xilinx, Inc. All Rights Reserved.
-############################################################
+set script_path [ file dirname [ file normalize [ info script ] ] ]
+puts $script_path
+
+file mkdir ../build
+cd ../build
+
 open_project matmul
 set_top matmul
-add_files matmul.cpp
+add_files $script_path/matmul.cpp
 open_solution "solution1"
 set_part {xc7vx690t-ffg1761-2}
 create_clock -period 5 -name default
