@@ -5,7 +5,7 @@ file mkdir ../build
 cd ../build
 
 open_project convolution
-set_top convolution_hls
+set_top convolution
 add_files $script_path/convolution.cpp
 open_solution "solution1"
 set_part {xc7vx690t-ffg1761-2}

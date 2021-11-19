@@ -1,13 +1,36 @@
-`include "xil_primitives.sv"
 `ifndef HIR_HELPER
   `define HIR_HELPER
 
-  module i32mult_dsp48(p, a, b, tstart, clk);
+module reg_r0_w1 #(
+    ELEMENT_WIDTH=64'd1
+  ) (	
+    input wire p0_rd_en,   
+    output wire[ELEMENT_WIDTH-1:0] p0_rd_data ,
+    input wire p1_wr_en,   
+    input wire[ELEMENT_WIDTH-1:0] p1_wr_data, 
+    input wire t,
+    input wire clk,   
+    input wire rst   
+  ); 
+    reg[ELEMENT_WIDTH-1:0] register=0;
+    always @(posedge clk)begin
+      if(rst) begin
+        register <= 0;
+      end 
+      else if(p1_wr_en) begin
+        register <= p1_wr_data;
+      end
+    end
+    assign p0_rd_data = register;
+  endmodule
+
+  module i32mult_dsp48(p, a, b, t, clk,rst);
     output wire[32 - 1 : 0] p;//2 cycle delay.
     input wire[32 - 1 : 0] a; 
     input wire[32 - 1 : 0] b; 
-    input wire tstart;
+    input wire t;
     input wire clk;
+    input wire rst;
 
     reg signed [32 - 1 : 0] a_reg0;
     reg signed [32 - 1 : 0] b_reg0;
@@ -17,9 +40,9 @@
     assign p = buff0;
     assign tmp_product = a_reg0 * b_reg0;
     always @ (posedge clk) begin
-        a_reg0 <= a;
-        b_reg0 <= b;
-        buff0 <= tmp_product;
+      a_reg0 <= a;
+      b_reg0 <= b;
+      buff0 <= tmp_product;
     end
   endmodule
 
@@ -28,7 +51,7 @@
     input wire cond,
     input wire[31:0] in1,
     input wire[31:0] in2,
-    input wire tstart,
+    input wire t,
     input wire clk
   );
 
@@ -38,22 +61,22 @@
   module readTimeVar(
     output wire tout, 
     input wire tin, 
-    input wire tstart,
+    input wire t,
     input wire clk
   );
 
     reg waiting=1'b0;
-    //tstart and waiting should never be true at the same time.
+    //t and waiting should never be true at the same time.
     always@(posedge clk) begin
       if(tin) begin
         waiting <= 1'b0;
       end
-      else if(tstart) begin
+      else if(t) begin
         waiting <= 1'b1;
       end
     end
 
-    assign tout = ((tstart  || waiting )&& tin)? 1'b1 : 1'b0;
+    assign tout = ((t  || waiting )&& tin)? 1'b1 : 1'b0;
 
   endmodule
 
@@ -61,7 +84,7 @@
     output reg [31:0] out,
     output wire  i_rd_en[2:0][2:0],
     input wire [31:0] i_rd_data[2:0][2:0],
-    input wire tstart,
+    input wire t,
     input wire clk
   );
     reg [31:0] out0,out1,out2;
@@ -76,7 +99,7 @@
     generate
       for(genvar i=0;i<3;i++) begin
         for(genvar j=0;j<3;j++) begin
-          assign i_rd_en[i][j] = tstart;
+          assign i_rd_en[i][j] = t;
         end
       end
     endgenerate
@@ -88,7 +111,7 @@
     input wire[31:0] w1,
     input wire[31:0] in2,
     input wire[31:0] w2,
-    input wire tstart,
+    input wire t,
     input wire clk
   );
     reg[31:0] m1_reg;
@@ -105,7 +128,7 @@
     output reg[31:0] out,
     input wire[31:0] in1,
     input wire[31:0] in2,
-    input wire tstart,
+    input wire t,
     input wire clk
   );
     always@(posedge clk) begin
@@ -117,7 +140,7 @@
     output reg[31:0] out,
     input  wire[31:0] in1,
     input  wire[31:0] in2,
-    input wire tstart,
+    input wire t,
     input wire clk
   );
     always@(posedge clk) begin
@@ -129,7 +152,7 @@
     output wire[31:0] out,
     input  wire[31:0] in1,
     input  wire[31:0] in2,
-    input wire tstart,
+    input wire t,
     input wire clk
   );
 
@@ -140,7 +163,7 @@
     output wire[31:0] out,
     input  wire[31:0] in1,
     input  wire[31:0] in2,
-    input wire tstart,
+    input wire t,
     input wire clk
   );
 
@@ -159,16 +182,17 @@
   endmodule
 
   module mult(
-    output reg[31:0] out,
-    input  wire[31:0] in1,
-    input  wire[31:0] in2,
-    input wire tstart,
-    input wire clk
+    output reg[31:0] result,
+    input  wire[31:0] a,
+    input  wire[31:0] b,
+    input wire t,
+    input wire clk,
+    input wire rst
   );
-    reg[31:0] out1;
+    reg[31:0] product;
     always@(posedge clk) begin
-      out1 <= in1*in2;
-      out <= out1;
+      product <= a*b;
+      result <= product;
     end
   endmodule
 `endif

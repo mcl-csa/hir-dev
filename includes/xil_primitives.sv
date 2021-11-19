@@ -2,6 +2,37 @@
 `ifndef HIR_XIL_PRIMITIVES
 `define HIR_XIL_PRIMITIVES
 
+module bram_r1_w1#(ADDR_WIDTH,ELEMENT_WIDTH=16) (
+ input wire p0_addr_en,
+ input wire [ADDR_WIDTH-1:0] p0_addr_data,
+ input wire p0_rd_en,
+ output wire[ELEMENT_WIDTH-1:0] p0_rd_data,
+ input wire p1_addr_en,
+ input wire [ADDR_WIDTH-1:0] p1_addr_data,
+ input wire p1_wr_en,
+ input wire [ELEMENT_WIDTH-1:0] p1_wr_data,
+ input t,
+ input clk,
+ input rst
+);
+
+bram_tdp_rf_rf#(.SIZE(2**ADDR_WIDTH) , .WIDTH(ELEMENT_WIDTH)) bram_inst (
+  .clka    (clk             ) ,
+  .ena     (p0_addr_en      ) ,
+  .wea     (1'b0            ) ,
+  .addra   (p0_addr_data    ) ,
+  .dia     (0               ) ,
+  .doa     (p0_rd_data      ) ,
+  .clkb    (clk             ) ,
+  .enb     (p1_addr_en      ) ,
+  .web     (p1_wr_en        ) ,
+  .addrb   (p1_addr_data    ) ,
+  .dib     (p1_wr_data      ) ,
+  .dob     (/*unconnected*/ )
+);
+
+endmodule
+
 module bram_tdp_rf_rf#(SIZE=1024,WIDTH=16) (clka,clkb,ena,enb,wea,web,addra,addrb,dia,dib,doa,dob);
 input wire clka,clkb,ena,enb,wea,web;
 input wire [$clog2(SIZE)-1:0] addra,addrb;

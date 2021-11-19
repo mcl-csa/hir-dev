@@ -1,0 +1,33 @@
+Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2019.1 (lin64) Build 2552052 Fri May 24 14:47:09 MDT 2019
+| Date         : Tue May 25 23:25:38 2021
+| Host         : pop-os running 64-bit Pop!_OS 20.10
+| Command      : report_utilization -hierarchical -file /home/kingshuk/Git_Clones/hir-evaluation/utilization-gesummv.txt
+| Design       : gesummv
+| Device       : 7vx690tffg1761-2
+| Design State : Routed
+-------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++-------------------+-----------------+------------+------------+---------+------+-----+--------+--------+--------------+
+|      Instance     |      Module     | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP48 Blocks |
++-------------------+-----------------+------------+------------+---------+------+-----+--------+--------+--------------+
+| gesummv           |           (top) |        137 |        131 |       0 |    6 | 240 |      0 |      0 |            9 |
+|   (gesummv)       |           (top) |         40 |         34 |       0 |    6 | 121 |      0 |      0 |            0 |
+|   i32Adder48      |        i32Adder |         32 |         32 |       0 |    0 |   0 |      0 |      0 |            0 |
+|   i32Multiplier31 |   i32Multiplier |         65 |         65 |       0 |    0 |  34 |      0 |      0 |            3 |
+|   i32Multiplier44 | i32Multiplier_0 |          0 |          0 |       0 |    0 |  51 |      0 |      0 |            3 |
+|   i32Multiplier46 | i32Multiplier_1 |          0 |          0 |       0 |    0 |  34 |      0 |      0 |            3 |
++-------------------+-----------------+------------+------------+---------+------+-----+--------+--------+--------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+

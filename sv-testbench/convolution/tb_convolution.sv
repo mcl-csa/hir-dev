@@ -1,13 +1,11 @@
-`include "tb_helpers.sv"
+`include "../tb_helpers.sv"
 `default_nettype none
 module tb_convolution();
-
   tb_convolution_mlir tb_mlir();
   tb_convolution_hls tb_hls();
 endmodule
 
 module tb_convolution_mlir();
-
   reg[31:0] img_mem[63:0];
   wire[5:0] img_addr     ;
   wire img_rd_en         ;
@@ -25,19 +23,15 @@ module tb_convolution_mlir();
 
   wire tstart;
   wire clk;
+  wire rst;
 
   initial begin
-    for (int i = 0; i < 64; i = i + 1) begin
-      img_mem[i] = i+1;
-    end
-    for (int i = 0; i < 4; i = i + 1) begin
-      kernel_mem[i] = 1;
-    end
-  end 
+      $readmemb("img_vector.mem",img_mem);
+      $readmemb("kernel_vector.mem",kernel_mem);
+  end
 
-  generate_clk gen_clk_inst(clk);
-  generate_tstart gen_tstart_inst(tstart);
-
+  clk_generator gen_clk_inst(clk,rst,tstart);
+  
   memref_rd#(.WIDTH(32),.SIZE(64)) 
   port_img_rd(img_mem,img_rd_en, img_addr,/*valid*/ ,img_rd_data,clk);
 
@@ -48,24 +42,27 @@ module tb_convolution_mlir();
   memref_wr#(.WIDTH(32),.SIZE(64)) 
   port_output_wr(output_mem,output_wr_en, output_addr,output_wr_data,clk);
 
-  convolution conv_mlir(
-    .v0_addr   (img_addr   ) ,
-    .v0_rd_en  (img_rd_en  ) ,
-    .v0_rd_data(img_rd_data) ,
-    .v1_addr   (kernel_addr   ) ,
-    .v1_rd_en  (kernel_rd_en  ) ,
-    .v1_rd_data(kernel_rd_data) ,
-    .v2_addr   (output_addr   ) ,
-    .v2_wr_en  (output_wr_en  ) ,
-    .v2_wr_data(output_wr_data) ,
-    .tstart    (tstart    ) ,
-    .clk       (clk       ) 
+  hir_convolution conv_mlir(
+    .img_p0_addr_data (img_addr) ,
+    .img_p0_addr_en (/*unconnected*/) ,
+    .img_p0_rd_en (img_rd_en) ,
+    .img_p0_rd_data (img_rd_data) ,
+    .kernel_p0_addr_en (/*unconnected*/),
+    .kernel_p0_addr_data (kernel_addr) ,
+    .kernel_p0_rd_en (kernel_rd_en) ,
+    .kernel_p0_rd_data (kernel_rd_data) ,
+    .output_p0_addr_en (/*unconnected*/),
+    .output_p0_addr_data (output_addr) ,
+    .output_p0_wr_en (output_wr_en) ,
+    .output_p0_wr_data (output_wr_data) ,
+    .t (tstart) ,
+    .clk (clk) ,
+    .rst (rst) 
   );
 
 endmodule
 
 module tb_convolution_hls();
-
   reg[31:0] img_mem[63:0];
   wire[5:0] img_addr     ;
   wire img_rd_en         ;
@@ -85,16 +82,11 @@ module tb_convolution_hls();
   wire clk;
 
   initial begin
-    for (int i = 0; i < 64; i = i + 1) begin
-      img_mem[i] = i+1;
-    end
-    for (int i = 0; i < 4; i = i + 1) begin
-      kernel_mem[i] = 1;
-    end
-  end 
+      $readmemb("img_vector.mem",img_mem);
+      $readmemb("kernel_vector.mem",kernel_mem);
+  end
 
-  generate_clk gen_clk_inst(clk);
-  generate_tstart gen_tstart_inst(tstart);
+  clk_generator gen_clk_inst(clk,rst,tstart);
 
   memref_rd#(.WIDTH(32),.SIZE(64)) 
   port_img_rd(img_mem,img_rd_en, img_addr,/*valid*/ ,img_rd_data,clk);

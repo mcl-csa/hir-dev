@@ -4,7 +4,7 @@ puts $script_path
 file mkdir ../build
 cd ../build
 
-open_project matmul
+open_project -upgrade matmul
 set_top matmul
 add_files $script_path/matmul.cpp
 open_solution "solution1"

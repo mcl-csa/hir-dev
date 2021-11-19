@@ -4,9 +4,9 @@
 #define IN_TYPE int
 #define OUT_TYPE int
 
-void matmul(IN_TYPE in1[MAX_SIZE * MAX_SIZE],  // Read-Only Matrix 1
-            IN_TYPE in2[MAX_SIZE * MAX_SIZE],  // Read-Only Matrix 2
-            OUT_TYPE out[MAX_SIZE * MAX_SIZE]  // Output Result
+void matmul(IN_TYPE Ai[MAX_SIZE * MAX_SIZE],  // Read-Only Matrix 1
+            IN_TYPE Bi[MAX_SIZE * MAX_SIZE],  // Read-Only Matrix 2
+            OUT_TYPE Co[MAX_SIZE * MAX_SIZE]  // Output Result
             )                                  // Matrix Dimension
 {
   // Local memory is implemented as BRAM memory blocks
@@ -33,8 +33,8 @@ readA:
       j = 0;
       i++;
     }
-    A[i][j] = in1[itr];
-    B[i][j] = in2[itr];
+    A[i][j] = Ai[itr];
+    B[i][j] = Bi[itr];
   }
 
   // By Default VHLS create single Memory with two ports for each local buffer
@@ -79,6 +79,6 @@ writeC:
       j = 0;
       i++;
     }
-    out[itr] = C[i][j];
+    Co[itr] = C[i][j];
   }
 }
