@@ -160,10 +160,11 @@ module reg_r0_w1 #(
   endmodule
 
   module i32Multiplier(
-    output wire[31:0] out,
-    input  wire[31:0] in1,
-    input  wire[31:0] in2,
+    output wire[31:0] result,
+    input  wire[31:0] a,
+    input  wire[31:0] b,
     input wire t,
+    input wire rst,
     input wire clk
   );
 
@@ -172,13 +173,13 @@ module reg_r0_w1 #(
     reg[31:0] out3;
     reg[31:0] out4;
     always@(posedge clk) begin
-      a1 <= in1;
-      b1 <= in2;
+      a1 <= a;
+      b1 <= b;
       out2 <= a1*b1;
       out3 <= out2;
       out4 <= out3;
     end
-    assign out = out4;
+    assign result = out4;
   endmodule
 
   module mult(

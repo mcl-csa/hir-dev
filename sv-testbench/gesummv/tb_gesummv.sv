@@ -1,16 +1,16 @@
-`include "tb_helpers.sv"
 `default_nettype none
 `define Alpha 1
 `define Beta 1
 module tb_gesummv();
- tb_gesummv_mlir  inst1();
- tb_gesummv_hls inst2();
+ tb_gesummv_hir  gesummv_hir_inst();
+ tb_gesummv_hls gesummv_hls_inst();
 endmodule
 
-module tb_gesummv_mlir();
+module tb_gesummv_hir();
 
   wire tstart;
   wire clk;
+  wire rst;
 
   wire[31:0] alpha;
   wire[31:0] beta;
@@ -55,8 +55,7 @@ module tb_gesummv_mlir();
   end 
 
 
-  generate_clk gen_clk_inst(clk);
-  generate_tstart gen_tstart_inst(tstart);
+  clk_generator gen_clk_inst(clk,rst,tstart);
 
   memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_tmp(tmp_mem,tmp_wr_en, tmp_addr,tmp_wr_data,clk);
   memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_A(A_mem,A_rd_en, A_addr,/*valid*/ ,A_rd_data,clk);
@@ -66,32 +65,40 @@ module tb_gesummv_mlir();
   memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_Y(Y_mem,Y_wr_en, Y_addr,Y_wr_data,clk);
 
   gesummv dut_inst(
-    .v0        (alpha) ,
-    .v1        (beta) ,
-    .v2_addr   (tmp_addr) ,
-    .v2_wr_en  (tmp_wr_en) ,
-    .v2_wr_data(tmp_wr_data) ,
-    .v3_addr   (A_addr) ,
-    .v3_rd_en  (A_rd_en) ,
-    .v3_rd_data(A_rd_data) ,
-    .v4_addr   (B_addr) ,
-    .v4_rd_en  (B_rd_en) ,
-    .v4_rd_data(B_rd_data) ,
-    .v5_addr   (X_addr) ,
-    .v5_rd_en  (X_rd_en) ,
-    .v5_rd_data(X_rd_data) ,
-    .v6_addr   (Y_addr) ,
-    .v6_wr_en  (Y_wr_en) ,
-    .v6_wr_data(Y_wr_data) ,
-    .tstart    (tstart) ,
-    .clk       (clk) 
+    .alpha            ( alpha           ) ,
+    .beta             ( beta            ) ,
+    .tmp_p0_addr_data ( tmp_addr        ) ,
+    .tmp_p0_addr_en   ( /*unconnected*/ ) ,
+    .tmp_p0_wr_data   ( tmp_wr_data     ) ,
+    .tmp_p0_wr_en     ( tmp_wr_en       ) ,
+    .A_p0_addr_data   ( A_addr          ) ,
+    .A_p0_addr_en     ( A_rd_en         ) ,
+    .A_p0_rd_data     ( A_rd_data       ) ,
+    .A_p0_rd_en       ( /*unconnected*/ ) ,
+    .B_p0_addr_data   ( B_addr          ) ,
+    .B_p0_addr_en     ( /*unconnected*/ ) ,
+    .B_p0_rd_data     ( B_rd_data       ) ,
+    .B_p0_rd_en       ( B_rd_en         ) ,
+    .X_p0_addr_data   ( X_addr          ) ,
+    .X_p0_addr_en     ( X_rd_en         ) ,
+    .X_p0_rd_data     ( X_rd_data       ) ,
+    .X_p0_rd_en       ( /*unconnected*/ ) ,
+    .Y_p0_addr_data   ( Y_addr          ) ,
+    .Y_p0_addr_en     ( Y_wr_en         ) ,
+    .Y_p0_wr_data     ( Y_wr_data       ) ,
+    .Y_p0_wr_en       ( /*unconnected*/ ) ,
+    .t                ( tstart          ) ,
+    .clk              ( clk             ) ,
+    .rst              ( rst             )
   );
+
 endmodule
 
 module tb_gesummv_hls();
 
   wire tstart;
   wire clk;
+  wire rst;
 
   wire[31:0] alpha;
   wire[31:0] beta;
@@ -136,8 +143,7 @@ module tb_gesummv_hls();
   end 
 
 
-  generate_clk gen_clk_inst(clk);
-  generate_tstart gen_tstart_inst(tstart);
+  clk_generator gen_clk_inst(clk,rst,tstart);
 
   memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_tmp(tmp_mem,tmp_wr_en, tmp_addr,tmp_wr_data,clk);
   memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_A(A_mem,A_rd_en, A_addr,/*valid*/ ,A_rd_data,clk);
@@ -148,27 +154,31 @@ module tb_gesummv_hls();
 
 
 gesummv_hls_0 your_instance_name (
-  .ap_clk(clk),                  // input wire ap_clk
-  .ap_rst(tstart),                  // input wire ap_rst
-  .alpha_V(alpha),                // input wire [31 : 0] alpha_V
-  .beta_V(beta),                  // input wire [31 : 0] beta_V
-  .tmp_V_ce0(),            // output wire tmp_V_ce0
-  .tmp_V_we0(tmp_wr_en),            // output wire tmp_V_we0
-  .tmp_V_address0(tmp_addr),  // output wire [2 : 0] tmp_V_address0
-  .tmp_V_d0(tmp_wr_data),              // output wire [31 : 0] tmp_V_d0
-  .A_V_ce0(A_rd_en),                // output wire A_V_ce0
-  .A_V_address0(A_addr),      // output wire [5 : 0] A_V_address0
-  .A_V_q0(A_rd_data),                  // input wire [31 : 0] A_V_q0
-  .B_V_ce0(B_rd_en),                // output wire B_V_ce0
-  .B_V_address0(B_addr),      // output wire [5 : 0] B_V_address0
-  .B_V_q0(B_rd_data),                  // input wire [31 : 0] B_V_q0
-  .x_V_ce0(X_rd_en),                // output wire x_V_ce0
-  .x_V_address0(X_addr),      // output wire [2 : 0] x_V_address0
-  .x_V_q0(X_rd_data),                  // input wire [31 : 0] x_V_q0
-  .y_V_ce0(),                // output wire y_V_ce0
-  .y_V_we0(Y_wr_en),                // output wire y_V_we0
-  .y_V_address0(Y_addr),      // output wire [2 : 0] y_V_address0
-  .y_V_d0(Y_wr_data)                  // output wire [31 : 0] y_V_d0
+  .ap_clk(clk),            
+  .ap_rst(rst),         
+  .alpha(alpha),           
+  .beta(beta),             
+  .tmp_ce0(),              
+  .tmp_we0(tmp_wr_en),     
+  .tmp_address0(tmp_addr), 
+  .tmp_d0(tmp_wr_data),    
+  .A_ce0(A_rd_en),         
+  .A_address0(A_addr),     
+  .A_q0(A_rd_data),        
+  .B_ce0(B_rd_en),         
+  .B_address0(B_addr),     
+  .B_q0(B_rd_data),        
+  .x_ce0(X_rd_en),         
+  .x_address0(X_addr),     
+  .x_q0(X_rd_data),        
+  .y_ce0(),                
+  .y_we0(Y_wr_en),         
+  .y_address0(Y_addr),     
+  .y_d0(Y_wr_data),
+  .ap_start(tstart),          // input wire ap_start
+  .ap_done(),            // output wire ap_done
+  .ap_idle(),            // output wire ap_idle
+  .ap_ready()          // output wire ap_ready
 );
 
 endmodule
