@@ -1,7 +1,7 @@
 `default_nettype none
 module tb_transpose();
- tb_transpose_hir  inst1();
- tb_transpose_hls inst2();
+ tb_transpose_hir  hir_inst();
+ tb_transpose_hls hls_inst();
 endmodule
 
 module tb_transpose_hir();
