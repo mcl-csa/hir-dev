@@ -106,58 +106,24 @@ module reg_r0_w1 #(
   endmodule
 
   module weighted_sum (
-    output wire[31:0] out,
-    input wire[31:0] in1,
-    input wire[31:0] w1,
-    input wire[31:0] in2,
-    input wire[31:0] w2,
+    output wire[31:0] result,
+    input wire[31:0] v0,
+    input wire[31:0] wt0,
+    input wire[31:0] v1,
+    input wire[31:0] wt1,
     input wire t,
+    input wire rst,
     input wire clk
   );
+    reg[31:0] m0_reg;
     reg[31:0] m1_reg;
-    reg[31:0] m2_reg;
     always@(posedge clk) begin
-      m1_reg <= in1*w1;
-      m2_reg <= in2*w2;
+      m0_reg <= v0*wt0;
+      m1_reg <= v1*wt1;
     end
-    assign out = m1_reg+m2_reg;
+    assign result = m0_reg+m1_reg;
   endmodule
 
-
-  module max (
-    output reg[31:0] out,
-    input wire[31:0] in1,
-    input wire[31:0] in2,
-    input wire t,
-    input wire clk
-  );
-    always@(posedge clk) begin
-      out <= (in1>in2)?in1:in2;
-    end
-  endmodule
-
-  module add(
-    output reg[31:0] out,
-    input  wire[31:0] in1,
-    input  wire[31:0] in2,
-    input wire t,
-    input wire clk
-  );
-    always@(posedge clk) begin
-      out <= in1+in2;
-    end
-  endmodule
-
-  module i32Adder(
-    output wire[31:0] out,
-    input  wire[31:0] in1,
-    input  wire[31:0] in2,
-    input wire t,
-    input wire clk
-  );
-
-    assign  out = in1+in2;  
-  endmodule
 
   module i32Multiplier(
     output wire[31:0] result,

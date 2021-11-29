@@ -4,7 +4,7 @@
 #define WIDTH 8
 #define K 2
 void convolution_hls(int img[HEIGHT][WIDTH], int kernel[K][K], int output[HEIGHT][WIDTH]) {
-#pragma HLS INTERFACE ap_ctrl_none port=return
+//#pragma HLS INTERFACE ap_ctrl_none port=return
   for(ap_uint<3> i=0;i<HEIGHT-K+1;i++){
     for(ap_uint<3> j=0;j<WIDTH-K+1;j++){
       int val =0;

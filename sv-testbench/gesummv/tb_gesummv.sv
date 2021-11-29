@@ -43,18 +43,12 @@ module tb_gesummv_hir();
   assign beta = `Beta;
 
   initial begin
-    for (int i = 0; i < 64; i = i + 1) begin
-      A_mem[i] = i+1;
-      B_mem[i] = i+1;
-    end
-    for (int i = 0; i < 8; i = i + 1) begin
-      tmp_mem[i] = i+1;
-      X_mem[i] = i+1;
-      Y_mem[i] = i+1;
-    end
-  end 
+      $readmemb("A_vector.mem",A_mem);
+      $readmemb("B_vector.mem",B_mem);
+      $readmemb("X_vector.mem",X_mem);
+  end
 
-
+  
   clk_generator gen_clk_inst(clk,rst,tstart);
 
   memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_tmp(tmp_mem,tmp_wr_en, tmp_addr,tmp_wr_data,clk);
@@ -64,7 +58,7 @@ module tb_gesummv_hir();
   memref_rd#(.WIDTH(32),.SIZE(8)) memref_rd_X(X_mem,X_rd_en, X_addr,/*valid*/ ,X_rd_data,clk);
   memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_Y(Y_mem,Y_wr_en, Y_addr,Y_wr_data,clk);
 
-  gesummv dut_inst(
+  gesummv_hir gesummv_hir_inst(
     .alpha            ( alpha           ) ,
     .beta             ( beta            ) ,
     .tmp_p0_addr_data ( tmp_addr        ) ,
@@ -127,33 +121,26 @@ module tb_gesummv_hls();
   wire [2:0] Y_addr;
   wire       Y_wr_en;
   wire[31:0] Y_wr_data;
+
   assign alpha = `Alpha;
   assign beta = `Beta;
 
   initial begin
-    for (int i = 0; i < 64; i = i + 1) begin
-      A_mem[i] = i+1;
-      B_mem[i] = i+1;
-    end
-    for (int i = 0; i < 8; i = i + 1) begin
-      tmp_mem[i] = i+1;
-      X_mem[i] = i+1;
-      Y_mem[i] = i+1;
-    end
-  end 
-
+      $readmemb("A_vector.mem",A_mem);
+      $readmemb("B_vector.mem",B_mem);
+      $readmemb("X_vector.mem",X_mem);
+  end
 
   clk_generator gen_clk_inst(clk,rst,tstart);
 
-  memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_tmp(tmp_mem,tmp_wr_en, tmp_addr,tmp_wr_data,clk);
   memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_A(A_mem,A_rd_en, A_addr,/*valid*/ ,A_rd_data,clk);
-
   memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_B(B_mem,B_rd_en, B_addr,/*valid*/ ,B_rd_data,clk);
   memref_rd#(.WIDTH(32),.SIZE(8)) memref_rd_X(X_mem,X_rd_en, X_addr,/*valid*/ ,X_rd_data,clk);
+
+  memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_tmp(tmp_mem,tmp_wr_en, tmp_addr,tmp_wr_data,clk);
   memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_Y(Y_mem,Y_wr_en, Y_addr,Y_wr_data,clk);
 
-
-gesummv_hls_0 your_instance_name (
+gesummv_hls_0 gesummv_hls_inst (
   .ap_clk(clk),            
   .ap_rst(rst),         
   .alpha(alpha),           
@@ -175,10 +162,10 @@ gesummv_hls_0 your_instance_name (
   .y_we0(Y_wr_en),         
   .y_address0(Y_addr),     
   .y_d0(Y_wr_data),
-  .ap_start(tstart),          // input wire ap_start
-  .ap_done(),            // output wire ap_done
-  .ap_idle(),            // output wire ap_idle
-  .ap_ready()          // output wire ap_ready
+  .ap_start(tstart), 
+  .ap_done(),        
+  .ap_idle(),        
+  .ap_ready()        
 );
 
 endmodule

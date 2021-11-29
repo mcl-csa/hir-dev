@@ -1,11 +1,12 @@
-############################################################
-## This file is generated automatically by Vivado HLS.
-## Please DO NOT edit it.
-## Copyright (C) 1986-2019 Xilinx, Inc. All Rights Reserved.
-############################################################
+set script_path [ file dirname [ file normalize [ info script ] ] ]
+puts $script_path
+
+file mkdir -p ../build
+cd ../build
+
 open_project stencil_1d
-set_top stencil_1d
-add_files stencil_1d.cpp
+set_top stencil_1d_hls
+add_files $script_path/stencil_1d.cpp
 open_solution "solution1"
 set_part {xc7vx690t-ffg1761-2}
 create_clock -period 5 -name default
@@ -14,6 +15,7 @@ config_export -format ip_catalog -rtl verilog -vivado_optimization_level 2
 set_clock_uncertainty 12.5%
 #csim_design
 time csynth_design
+#quit
+#cosim_design
+export_design -flow impl -rtl verilog -format ip_catalog
 quit
-#osim_design
-#xport_design -flow impl -rtl verilog -format ip_catalog

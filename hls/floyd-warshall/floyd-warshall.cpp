@@ -1,5 +1,5 @@
-void kernel_floyd_warshall(int n, int path[8][8]) {
-#pragma HLS INTERFACE ap_ctrl_none port=return
+void floyd_warshall_hls(int n, int path[8][8]) {
+//#pragma HLS INTERFACE ap_ctrl_none port=return
   int i, j, k;
 
   for (k = 0; k < 8; k++) {

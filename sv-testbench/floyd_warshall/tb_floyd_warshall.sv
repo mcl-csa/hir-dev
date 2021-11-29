@@ -3,18 +3,16 @@
 `define Beta 1
 
 module tb_floyd_warshall();
- tb_floyd_warshall_mlir  inst1();
- tb_floyd_warshall_hls inst2();
+ tb_floyd_warshall_hir  floyd_warshall_hir_inst();
+ tb_floyd_warshall_hls floyd_warshall_hls_inst();
 endmodule
 
-module tb_floyd_warshall_mlir();
+module tb_floyd_warshall_hir();
 
   wire tstart;
   wire clk;
   wire rst;
 
-  wire[31:0] alpha;
-  wire[31:0] beta;
 
   reg[31:0]  path_mem[63:0];
   wire [5:0] path_wr_addr;
@@ -38,7 +36,7 @@ module tb_floyd_warshall_mlir();
   memref_wr#(.WIDTH(32),.SIZE(64)) memref_wr_path(path_mem,path_wr_en, path_wr_addr,path_wr_data,clk);
   memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_path(path_mem,path_rd_en, path_rd_addr,/*valid*/ ,path_rd_data,clk);
 
-floyd_warshall mlir_inst(
+floyd_warshall_hir hir_inst(
   .n(0),
   .path_r_p0_addr_data(path_rd_addr),
   .path_r_p0_addr_en(),
@@ -60,9 +58,6 @@ module tb_floyd_warshall_hls();
   wire tstart;
   wire clk;
   wire rst;
-
-  wire[31:0] alpha;
-  wire[31:0] beta;
 
   reg[31:0]  path_mem[63:0];
   wire [5:0] path_addr1;
@@ -88,17 +83,33 @@ module tb_floyd_warshall_hls();
   memref_wr#(.WIDTH(32),.SIZE(64)) memref_wr_path1(path_mem,path_wr_en, path_addr1,path_wr_data,clk);
   memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_path1(path_mem,path_rd_en1, path_addr1,/*valid*/ ,path_rd_data1,clk);
 
-  kernel_floyd_warshall_0 your_instance_name (
-  .ap_clk(clk),                // input wire ap_clk
-  .ap_rst(tstart),                // input wire ap_rst
-  .n(0),                          // input wire [31 : 0] n
-  .path_ce0(path_rd_en),            // output wire path_ce0
-  .path_address0(path_rd_addr),  // output wire [5 : 0] path_address0
-  .path_q0(path_rd_data),              // input wire [31 : 0] path_q0
-  .path_ce1(path_rd_en1),            // output wire path_ce1
-  .path_we1(path_wr_en),            // output wire path_we1
-  .path_address1(path_addr1),  // output wire [5 : 0] path_address1
-  .path_d1(path_wr_data),              // output wire [31 : 0] path_d1
-  .path_q1(path_rd_data1)              // input wire [31 : 0] path_q1
+  floyd_warshall_hls_0 hls_inst (
+  .ap_clk(clk),                
+  .ap_rst(tstart),             
+  .n(0),                       
+  .path_ce0(path_rd_en),       
+  .path_address0(path_rd_addr),
+  .path_q0(path_rd_data),      
+  .path_ce1(path_rd_en1),      
+  .path_we1(path_wr_en),       
+  .path_address1(path_addr1),  
+  .path_d1(path_wr_data),      
+  .path_q1(path_rd_data1)      
+
+  .path_ce0(path_ce0),            // output wire path_ce0
+  .path_we0(path_we0),            // output wire path_we0
+  .path_ce1(path_ce1),            // output wire path_ce1
+  .ap_clk(ap_clk),                // input wire ap_clk
+  .ap_rst(ap_rst),                // input wire ap_rst
+  .ap_start(ap_start),            // input wire ap_start
+  .ap_done(ap_done),              // output wire ap_done
+  .ap_idle(ap_idle),              // output wire ap_idle
+  .ap_ready(ap_ready),            // output wire ap_ready
+  .n(n),                          // input wire [31 : 0] n
+  .path_address0(path_address0),  // output wire [5 : 0] path_address0
+  .path_d0(path_d0),              // output wire [31 : 0] path_d0
+  .path_q0(path_q0),              // input wire [31 : 0] path_q0
+  .path_address1(path_address1),  // output wire [5 : 0] path_address1
+  .path_q1(path_q1)              // input wire [31 : 0] path_q1
 );
 endmodule
