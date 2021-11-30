@@ -1,5 +1,4 @@
 void floyd_warshall_hls(int n, int path[8][8]) {
-  //  #pragma HLS RESOURCE variable=path core=RAM_S2P_BRAM
   int i, j, k;
 
   for (i = 0; i < 8; i++){
