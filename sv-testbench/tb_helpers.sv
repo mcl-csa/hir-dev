@@ -53,7 +53,7 @@ module  memref_rd#(WIDTH=32,SIZE=8)(
       dout_valid <= 1'b1;
     end
     else begin
-      dout <= 'X;
+      //dout <= 'X;
       dout_valid <= 1'b0;
     end
   end
