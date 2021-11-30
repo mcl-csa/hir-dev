@@ -13,39 +13,44 @@ module tb_floyd_warshall_hir();
   wire clk;
   wire rst;
 
-
   reg[31:0]  path_mem[63:0];
-  wire [5:0] path_wr_addr;
-  wire       path_wr_en;
-  wire[31:0] path_wr_data;
 
-  wire [5:0] path_rd_addr;
-  wire       path_rd_en;
-  wire[31:0] path_rd_data;
+  wire [5:0] path_addr1;
+  wire       path_wr_en1;
+  wire[31:0] path_wr_data1;
+  wire       path_rd_en1;
+  wire[31:0] path_rd_data1;
+
+  wire [5:0] path_addr0;
+  wire       path_rd_en0;
+  wire[31:0] path_rd_data0;
 
   initial begin
     for (int i = 0; i < 64; i = i + 1) begin
       path_mem[i] = i+1;
     end
-    path_mem[32] = 0;
+    path_mem[32] = 1;
   end 
 
 
   clk_generator gen_clk_inst(clk,rst,tstart);
 
-  memref_wr#(.WIDTH(32),.SIZE(64)) memref_wr_path(path_mem,path_wr_en, path_wr_addr,path_wr_data,clk);
-  memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_path(path_mem,path_rd_en, path_rd_addr,/*valid*/ ,path_rd_data,clk);
+  memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_path0(path_mem,path_rd_en0, path_addr0,/*valid*/ ,path_rd_data0,clk);
+  memref_rd#(.WIDTH(32),.SIZE(64)) memref_rd_path1(path_mem,path_rd_en1, path_addr1,/*valid*/ ,path_rd_data1,clk);
+  memref_wr#(.WIDTH(32),.SIZE(64)) memref_wr_path1(path_mem,path_wr_en1, path_addr1,path_wr_data1,clk);
 
 floyd_warshall_hir hir_inst(
   .n(0),
-  .path_r_p0_addr_data(path_rd_addr),
-  .path_r_p0_addr_en(),
-  .path_r_p0_rd_en(path_rd_en),
-  .path_r_p0_rd_data(path_rd_data),
-  .path_w_p0_addr_data(path_wr_addr),
-  .path_w_p0_addr_en(),
-  .path_w_p0_wr_en(path_wr_en),
-  .path_w_p0_wr_data(path_wr_data),
+  .path_p0_addr_data(path_addr0),
+  .path_p0_addr_en(),
+  .path_p0_rd_en(path_rd_en0),
+  .path_p0_rd_data(path_rd_data0),
+  .path_p1_addr_data(path_addr1),
+  .path_p1_addr_en(),
+  .path_p1_wr_en(path_wr_en1),
+  .path_p1_wr_data(path_wr_data1),
+  .path_p1_rd_en(path_rd_en1),
+  .path_p1_rd_data(path_rd_data1),
   .t(tstart),
   .clk(clk),
   .rst(rst)
@@ -72,7 +77,7 @@ module tb_floyd_warshall_hls();
   wire[31:0] path_rd_data1;
   initial begin
     for (int i = 0; i < 64; i = i + 1) begin
-      path_mem[i] = i+1;
+      path_mem[i] = i;
     end
     path_mem[32] = 0;
   end 

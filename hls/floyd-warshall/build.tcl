@@ -16,5 +16,5 @@ set_clock_uncertainty 12.5%
 #csim_design
 time csynth_design
 #osim_design
-export_design -flow impl -rtl verilog -format ip_catalog
+export_design -format ip_catalog
 quit
