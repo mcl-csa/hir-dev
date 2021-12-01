@@ -12,11 +12,13 @@ extern "C" {
     //#pragma HLS INTERFACE s_axilite port=tmp_int bundle=control
     //#pragma HLS INTERFACE s_axilite port=return bundle=control
     ap_uint<32> A[8][8];
-    #pragma HLS resource variable=A core=RAM_1P_BRAM
+#pragma HLS BIND_STORAGE variable=A type=ram_s2p
+
     ap_uint<32> x[8];
-    #pragma HLS resource variable=x core=RAM_1P_BRAM
+#pragma HLS BIND_STORAGE variable=x type=ram_s2p
     ap_uint<32> y[8];
-    #pragma HLS resource variable=y core=RAM_1P_BRAM
+#pragma HLS BIND_STORAGE variable=y type=ram_s2p
+
     for(int i0 = 0; i0 < 8; i0++) {
       #pragma HLS UNROLL factor=1 skip_exit_check
       #pragma HLS LOOP_FLATTEN off
