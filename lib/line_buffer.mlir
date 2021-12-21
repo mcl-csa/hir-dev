@@ -43,5 +43,3 @@ hir.func @row_buffer_slide at %t(
   
   hir.return (%value) :(f32)
 }
-
-
