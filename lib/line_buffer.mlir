@@ -8,6 +8,7 @@ hir.func.extern @fifo_push at %t (
 %wr_idx :!hir.memref<(bank 1)xi6> ports[#reg_r,#reg_w],
 %buffer :!hir.memref<64xf32> ports [#bram_w]
 )
+
 hir.func.extern @fifo_pop at %t (
 %rd_idx :!hir.memref<(bank 1)xi6> ports[#reg_r,#reg_w],
 %buffer :!hir.memref<64xf32> ports [#bram_r]
@@ -19,7 +20,7 @@ hir.func @row_buffer_slide at %t(
 %wr_idx :!hir.memref<(bank 1)xi6> ports [#reg_r,#reg_w],
 %ram_buffer : !hir.memref<64xf32> ports [#bram_r,#bram_w],
 %reg_buffer : !hir.memref<(bank 5)xf32> ports [#reg_r,#reg_w]
-) -> (%result:f32){
+) -> (%result:f32 delay 1){
   
   %0 = arith.constant 0:index
   %1 = arith.constant 1:index
@@ -27,7 +28,7 @@ hir.func @row_buffer_slide at %t(
   %5 = arith.constant 5:index
 
   hir.call @fifo_push(%v, %wr_idx, %ram_buffer) at %t : !hir.func<(f32, !hir.memref<(bank 1)xi6> ports [#reg_r,#reg_w], !hir.memref<64xf32> ports [#bram_w])>
-  %v0 =  hir.call @fifo_pop(%rd_idx, %ram_buffer) at %t : !hir.func<(!hir.memref<(bank 1)xi6> ports [#reg_r,#reg_w], !hir.memref<64xf32> ports [#bram_w]) ->(f32)>
+  %v0 =  hir.call @fifo_pop(%rd_idx, %ram_buffer) at %t : !hir.func<(!hir.memref<(bank 1)xi6> ports [#reg_r,#reg_w], !hir.memref<64xf32> ports [#bram_w]) ->(f32 delay 1)>
 
   hir.store %v0 to %reg_buffer[port 1][%0] at %t+1 :!hir.memref<(bank 5)xf32>
    
@@ -43,5 +44,3 @@ hir.func @row_buffer_slide at %t(
   
   hir.return (%value) :(f32)
 }
-
-
