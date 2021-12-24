@@ -6,19 +6,31 @@ using namespace std;
 
 //helper functions.
 
-void convX(Mat& output, Mat& image, Mat& kernel){
-	Mat img;
-
-	image.convertTo(img,CV_32F);
-
+void conv(Mat& output, Mat& img, Mat& kernel){
 	for(int i=0;i<img.rows-kernel.rows;i++){
 		for(int j=0;j<img.cols-kernel.cols;j++){
 			output.at<float>(i,j) =0;
 			for(int ii=0;ii<kernel.rows;ii++){
-				for(int jj=0;jj<kernel.rows;jj++){
+				for(int jj=0;jj<kernel.cols;jj++){
 					output.at<float>(i,j)+=kernel.at<float>(ii,jj)*img.at<float>(i+ii,j+jj);
-				}
+				 }
 			}
+		}
+	}
+}
+
+void sharpen(Mat& output, Mat& img, Mat& blury, float weight){
+	for(int i=0;i<img.rows;i++){
+		for(int j=0;j<img.cols;j++){
+			 output.at<float>(i,j) +=  (1+weight)*img.at<float>(i,j) - weight*blury.at<float>(i,j);
+		}
+	}
+}
+
+void mask(Mat& output, Mat& img, Mat& blury,Mat& sharp, float threshold){
+	for(int i=0;i<img.rows;i++){
+		for(int j=0;j<img.cols;j++){
+			 output.at<float>(i,j) +=  (abs(img.at<float>(i,j)-blury.at<float>(i,j))<threshold?img.at<float>(i,j):sharp.at<float>(i,j));
 		}
 	}
 }
@@ -33,8 +45,6 @@ void showFloatMat(Mat& img){
 int main(int argc, char** argv)
 {
 	float blur_kernel_values[5] = {1/16.0, 4/16.0, 6/16.0, 4/16.0, 1/16.0};
-	// Read the image file as
-	// imread("default.jpg");
 	Mat image = imread("../lenna.png",
 			IMREAD_GRAYSCALE);
 
@@ -52,15 +62,24 @@ int main(int argc, char** argv)
 	// Show Image inside a window with
 	// the name provided
 
-	Mat kernel = Mat(5,1,CV_32F,blur_kernel_values);
-	Mat blurx (image.rows,image.cols,CV_32F,0.0);
+	Mat img;
+	image.convertTo(img,CV_32F);
 
-	convX(blurx,image,kernel);
-	showFloatMat(blurx);
+	Mat kernelX = Mat(5,1,CV_32F,blur_kernel_values);
+	Mat kernelY = Mat(1,5,CV_32F,blur_kernel_values);
+	Mat blurx (img.rows,img.cols,CV_32F,0.0);
+	Mat blury (img.rows,img.cols,CV_32F,0.0);
+	Mat sharp_img (img.rows,img.cols,CV_32F,0.0);
+	Mat mask_img (img.rows,img.cols,CV_32F,0.0);
+
+	conv(blurx,img,kernelX);
+	conv(blury,blurx,kernelY);
+	sharpen(sharp_img,img,blury,3);
+	mask(mask_img,img,blury,sharp_img,0.001);
+
+	showFloatMat(mask_img);
 	// Wait for any keystroke
 	waitKey(0);
 
-
 	return 0;
 }
-
