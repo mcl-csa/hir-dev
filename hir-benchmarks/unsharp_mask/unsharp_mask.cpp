@@ -44,3 +44,16 @@ void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float
 		}
 	}
 }
+
+void unsharp_mask(float img[IMG_SIZE][IMG_SIZE], float mask_img[IMG_SIZE][IMG_SIZE]){
+
+float blurxData[IMG_SIZE][IMG_SIZE];
+float bluryData[IMG_SIZE][IMG_SIZE];
+float kernelData[KERNEL_SIZE] = {1/16.0, 4/16.0, 6/16.0, 4/16.0, 1/16.0};
+float sharpImgData[IMG_SIZE][IMG_SIZE];
+
+	convX(blurxData,img,kernelData);
+	convY(bluryData,blurxData,kernelData);
+	sharpen(sharpImgData,img,bluryData,3);
+	mask(mask_img,img,bluryData,sharpImgData,0.001);
+}
