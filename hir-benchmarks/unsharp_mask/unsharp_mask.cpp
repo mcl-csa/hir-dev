@@ -1,85 +1,46 @@
-// C++ program for the above approach
-#include <iostream>
-#include <opencv2/opencv.hpp>
-using namespace cv;
-using namespace std;
+#include "unsharp_mask.h"
 
-//helper functions.
+static float abs(float v){
+	return v>0?v:-v;
+}
 
-void conv(Mat& output, Mat& img, Mat& kernel){
-	for(int i=0;i<img.rows-kernel.rows;i++){
-		for(int j=0;j<img.cols-kernel.cols;j++){
-			output.at<float>(i,j) =0;
-			for(int ii=0;ii<kernel.rows;ii++){
-				for(int jj=0;jj<kernel.cols;jj++){
-					output.at<float>(i,j)+=kernel.at<float>(ii,jj)*img.at<float>(i+ii,j+jj);
-				 }
+void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
+	for(int i=0;i<IMG_SIZE-KERNEL_SIZE;i++){
+		for(int j=0;j<IMG_SIZE-KERNEL_SIZE;j++){
+			//output[i][j]= img[i][j];
+			output[i][j] =0;
+			for(int kk=0;kk<KERNEL_SIZE;kk++){
+					output[i][j]+=kernel[kk]*img[i][j+kk];
 			}
 		}
 	}
 }
 
-void sharpen(Mat& output, Mat& img, Mat& blury, float weight){
-	for(int i=0;i<img.rows;i++){
-		for(int j=0;j<img.cols;j++){
-			 output.at<float>(i,j) +=  (1+weight)*img.at<float>(i,j) - weight*blury.at<float>(i,j);
+
+void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
+	for(int i=0;i<IMG_SIZE-KERNEL_SIZE;i++){
+		for(int j=0;j<IMG_SIZE-KERNEL_SIZE;j++){
+			//output[i][j]= img[i][j];
+			output[i][j] =0;
+			for(int kk=0;kk<KERNEL_SIZE;kk++){
+					output[i][j]+=kernel[kk]*img[i+kk][j];
+			}
 		}
 	}
 }
 
-void mask(Mat& output, Mat& img, Mat& blury,Mat& sharp, float threshold){
-	for(int i=0;i<img.rows;i++){
-		for(int j=0;j<img.cols;j++){
-			 output.at<float>(i,j) +=  (abs(img.at<float>(i,j)-blury.at<float>(i,j))<threshold?img.at<float>(i,j):sharp.at<float>(i,j));
+void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float blury[IMG_SIZE][IMG_SIZE], float weight){
+	for(int i=0;i<IMG_SIZE;i++){
+		for(int j=0;j<IMG_SIZE;j++){
+			 output[i][j] +=  (1+weight)*img[i][j] - weight*blury[i][j];
 		}
 	}
 }
 
-void showFloatMat(Mat& img){
-	Mat img2;
-	img.convertTo(img2,CV_8U);
-	imshow("Window Name", img2);
-}
-
-// Driver code
-int main(int argc, char** argv)
-{
-	float blur_kernel_values[5] = {1/16.0, 4/16.0, 6/16.0, 4/16.0, 1/16.0};
-	Mat image = imread("../lenna.png",
-			IMREAD_GRAYSCALE);
-
-	// Error Handling
-	if (image.empty()) {
-		cout << "Image File "
-			<< "Not Found" << endl;
-
-		// wait for any key press
-		cin.get();
-		return -1;
+void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float blury[IMG_SIZE][IMG_SIZE],float sharp[IMG_SIZE][IMG_SIZE], float threshold){
+	for(int i=0;i<IMG_SIZE;i++){
+		for(int j=0;j<IMG_SIZE;j++){
+			 output[i][j] +=  (abs(img[i][j]-blury[i][j])<threshold?img[i][j]:sharp[i][j]);
+		}
 	}
-
-
-	// Show Image inside a window with
-	// the name provided
-
-	Mat img;
-	image.convertTo(img,CV_32F);
-
-	Mat kernelX = Mat(5,1,CV_32F,blur_kernel_values);
-	Mat kernelY = Mat(1,5,CV_32F,blur_kernel_values);
-	Mat blurx (img.rows,img.cols,CV_32F,0.0);
-	Mat blury (img.rows,img.cols,CV_32F,0.0);
-	Mat sharp_img (img.rows,img.cols,CV_32F,0.0);
-	Mat mask_img (img.rows,img.cols,CV_32F,0.0);
-
-	conv(blurx,img,kernelX);
-	conv(blury,blurx,kernelY);
-	sharpen(sharp_img,img,blury,3);
-	mask(mask_img,img,blury,sharp_img,0.001);
-
-	showFloatMat(mask_img);
-	// Wait for any keystroke
-	waitKey(0);
-
-	return 0;
 }

@@ -15,5 +15,5 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 # The following folder will be included
 include_directories(${OPENCV4_INCLUDE_DIRS})
-add_executable(${PROJECT_NAME} unsharp_mask.cpp)
+add_executable(${PROJECT_NAME} main.cpp unsharp_mask.cpp)
 target_link_libraries(${PROJECT_NAME} ${OPENCV4_LIBRARIES})
