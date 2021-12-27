@@ -7,20 +7,17 @@ static float abs(float v){
 void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
 	for(int i=0;i<IMG_SIZE-KERNEL_SIZE;i++){
 		for(int j=0;j<IMG_SIZE-KERNEL_SIZE;j++){
-			//output[i][j]= img[i][j];
 			output[i][j] =0;
 			for(int kk=0;kk<KERNEL_SIZE;kk++){
-					output[i][j]+=kernel[kk]*img[i][j+kk];
+				output[i][j]+=kernel[kk]*img[i][j+kk];
 			}
 		}
 	}
 }
 
-
 void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
 	for(int i=0;i<IMG_SIZE-KERNEL_SIZE;i++){
 		for(int j=0;j<IMG_SIZE-KERNEL_SIZE;j++){
-			//output[i][j]= img[i][j];
 			output[i][j] =0;
 			for(int kk=0;kk<KERNEL_SIZE;kk++){
 					output[i][j]+=kernel[kk]*img[i+kk][j];

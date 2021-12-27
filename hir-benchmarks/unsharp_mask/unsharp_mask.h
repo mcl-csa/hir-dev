@@ -1,4 +1,4 @@
-#define IMG_SIZE 512
+#define IMG_SIZE 32
 #define KERNEL_SIZE 5
 
 
