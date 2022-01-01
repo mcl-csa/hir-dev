@@ -2,7 +2,9 @@
 #bram_r = {"rd_latency"=1}
 #reg_w = {"wr_latency"=1}
 #reg_r = {"rd_latency"=0}
-hir.func.extern @
+hir.func.extern @mult_f32 at %t(%a:f32,%b:f32) ->(%result:f32 delay 3)
+hir.func.extern @add_f32 at %t(%a:f32,%b:f32) ->(%result:f32 delay 2)
+
 hir.func @convX at %t(%output:!hir.memref<32x32xf32> ports [#bram_w],
 %img:!hir.memref<32x32xf32> ports [#bram_r],
 %kernel:!hir.memref<8xf32> ports [#bram_r]){
@@ -18,7 +20,7 @@ hir.func @convX at %t(%output:!hir.memref<32x32xf32> ports [#bram_w],
     %tj_end=hir.for %j:i6=%c0_i6 to %c32_i6 step %c1_i6 iter_time(%tj=%ti){
 
       %r = hir.alloca "reg" :!hir.memref<(bank 1)xf32> ports [#reg_r,#reg_w]
-      hir.for %kk:i3=%c0_i3 to %c5_i3 step %c1_i3 iter_time(%tkk=%tj){
+      %tkk_end=hir.for %kk:i3=%c0_i3 to %c5_i3 step %c1_i3 iter_time(%tkk=%tj){
         %kernel_val = hir.load %kernel[port 0][%kk] at %tkk : !hir.memref<8xf32> delay 1
         %i_i5 = comb.extract %i from 0 :(i6)->(i5)
         %kk_i6 = comb.concat %c0_i3, %kk :i3,i3
@@ -29,10 +31,12 @@ hir.func @convX at %t(%output:!hir.memref<32x32xf32> ports [#bram_w],
         %prev_val = hir.load %r[port 0][%0] at %tkk+4 : !hir.memref<(bank 1)xf32> delay 0
         %s = hir.call @add_f32(%p,%prev_val) at %tkk+4 :!hir.func<(f32,f32)->(f32 delay 2)>
         hir.store %s to %r[port 1][%0] at %tkk+6: !hir.memref<(bank 1)xf32> delay 1
+        hir.next_iter at %tkk+6
       }
       //output[%i][%j] =
-      hir.next_iter at %tj+6
+      hir.next_iter at %tkk_end
     }
     hir.next_iter at %tj_end
   }  
+  hir.return
 }
