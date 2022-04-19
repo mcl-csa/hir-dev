@@ -58,7 +58,7 @@ module tb_gesummv_hir();
   memref_rd#(.WIDTH(32),.SIZE(8)) memref_rd_X(X_mem,X_rd_en, X_addr,/*valid*/ ,X_rd_data,clk);
   memref_wr#(.WIDTH(32),.SIZE(8)) memref_wr_Y(Y_mem,Y_wr_en, Y_addr,Y_wr_data,clk);
 
-  gesummv_hir gesummv_hir_inst(
+ gesummv_hir gesummv_hir_inst(
     .alpha            ( alpha           ) ,
     .beta             ( beta            ) ,
     .tmp_p0_addr_data ( tmp_addr        ) ,

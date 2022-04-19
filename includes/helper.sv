@@ -1,6 +1,6 @@
 `ifndef HIR_HELPER
   `define HIR_HELPER
-
+  //`default_nettype none
 module reg_r0_w1 #(
     ELEMENT_WIDTH=64'd1
   ) (	
@@ -161,5 +161,31 @@ module reg_r0_w1 #(
       product <= a*b;
       result <= product;
     end
+  endmodule
+  
+ module add_i32(
+ output wire[31:0] out,
+ input wire[31:0] a,
+ input wire [31:0] b,
+ input wire t,
+ input wire clk,
+ input wire rst
+  );
+  assign out = a+b;
+ endmodule
+ 
+ module mul_i32(
+ output reg[31:0] out,
+ input wire[31:0] a,
+ input wire [31:0] b,
+ input wire t,
+ input wire clk,
+ input wire rst
+  );
+  wire [31:0] prod;
+  assign prod = a*b;
+  always@(posedge clk)begin
+    out <=prod;
+  end
   endmodule
 `endif
