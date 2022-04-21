@@ -57,33 +57,36 @@ inline void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE]
 	}
 }
 
-void unsharp_mask(float img[IMG_SIZE][IMG_SIZE], float mask_img[IMG_SIZE][IMG_SIZE]){
-#pragma HLS INTERFACE mode=ap_ctrl_chain port=return
-#pragma HLS DATAFLOW
+void unsharp_mask_hls(float img[IMG_SIZE][IMG_SIZE], float mask_img[IMG_SIZE][IMG_SIZE],float kernelDataX[KERNEL_SIZE], float kernelDataY[KERNEL_SIZE]){
+//#pragma HLS INTERFACE mode=ap_memory port=img storage_impl=bram storage_type=ram_1p
+//#pragma HLS INTERFACE mode=ap_memory port=mask_img  storage_type=ram_1p
+//#pragma HLS INTERFACE mode=ap_memory port=kernelDataX  storage_type=ram_1p
+//#pragma HLS INTERFACE mode=ap_memory port=kernelDataY  storage_type=ram_1p
+#pragma HLS INTERFACE mode=ap_ctrl_none 
+//#pragma HLS DATAFLOW
 
 float blurxData[IMG_SIZE][IMG_SIZE];
 float bluryData[IMG_SIZE][IMG_SIZE];
 float bluryData0[IMG_SIZE][IMG_SIZE];
 float bluryData1[IMG_SIZE][IMG_SIZE];
-#pragma HLS STREAM depth=3 type=pipo variable=bluryData1
+//#pragma HLS STREAM depth=3 type=pipo variable=bluryData1
 float imgtemp[IMG_SIZE][IMG_SIZE];
 float img0[IMG_SIZE][IMG_SIZE];
 
 //Below pragma should not have worked because img0 is not read in same order as its writes,
 //but vitis hls still implements img0 as a fifo (not pipo(ping-pong buffer)).
-#pragma HLS STREAM depth=4 variable=img0
+//#pragma HLS STREAM depth=4 variable=img0
 //#pragma HLS STREAM type=pipo variable=img0
 float img1[IMG_SIZE][IMG_SIZE];
-#pragma HLS STREAM depth=4 variable=img1
+//#pragma HLS STREAM depth=4 variable=img1
 float img2[IMG_SIZE][IMG_SIZE];
 //#pragma HLS STREAM depth=2048 variable=img2
-float kernelData[KERNEL_SIZE] = {1/16.0, 4/16.0, 6/16.0, 4/16.0, 1/16.0};
 float sharpImgData[IMG_SIZE][IMG_SIZE];
 
 	split(imgtemp,img0,img);
 	split(img2,img1,imgtemp);
-	convX(blurxData,img0,kernelData);
-	convY(bluryData,blurxData,kernelData);
+	convX(blurxData,img0,kernelDataX);
+	convY(bluryData,blurxData,kernelDataY);
 	split(bluryData0,bluryData1,bluryData);
 	sharpen(sharpImgData,img1,bluryData0,3);
 	mask(mask_img,img2,bluryData1,sharpImgData,0.001);

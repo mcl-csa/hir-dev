@@ -7,14 +7,15 @@ module clk_generator(clk,rst, tstart);
     clk <= 1'b0;
   end
   initial begin
+    rst<=1'b0;
     #1
     rst<=1'b1;
-    #2
+    #6
     rst<=1'b0;
   end
   initial begin
     tstart <= 1'b0;
-    #10 tstart <= 1'b1;
+    #40 tstart <= 1'b1;
     #2 tstart <= 1'b0;
   end
   always begin

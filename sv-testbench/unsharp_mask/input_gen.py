@@ -3,7 +3,7 @@ from PIL import Image,ImageOps
 import bitstring
 
 def floatToBits(f):
-    f1 = bitstring.BitArray(float=1.0, length=32)
+    f1 = bitstring.BitArray(float=f, length=32)
     return f1.bin
 
 img = Image.open('lenna.png')
@@ -15,3 +15,10 @@ with open('lenna.mem','w') as f:
             f.write(floatToBits(float(np_frame[i,j])))
             f.write("\n")
 
+kernel = [1.0/16,4.0/16,8.0/16,4.0/16,1.0/16,0.0,0.0,0.0]
+with open('kernel.mem','w') as f:
+    for i in range(len(kernel)):
+            f.write(floatToBits(float(kernel[i])))
+            f.write("\n")
+
+import pdb;pdb.set_trace()
