@@ -3,14 +3,21 @@
 #bram_w = {"wr_latency"=1}
 #reg_w = {"wr_latency"=1}
 
-hir.func.extern @mul_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 8)
-hir.func.extern @add_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 11)
-hir.func.extern @sub_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 11)
-hir.func.extern @ugt_f32 at %t(%a:i32, %b:i32) ->(%out:i1 delay 2)
-hir.func.extern @ult_f32 at %t(%a:i32, %b:i32) ->(%out:i1 delay 2)
-hir.func.extern @neg_f32 at %t(%a:i32) ->(%out:i32)
-hir.func.extern @select_f32 at %t(%cmp:i32,%a:i32,%b:i32) ->(%out:i32)
-hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32)
+hir.func.extern @mul_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 8) {argNames=["a","b","t"], resultNames=["out"]}
+hir.func.extern @add_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 11){argNames=["a","b","t"], resultNames=["out"]}
+
+hir.func.extern @sub_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 11){argNames=["a","b","t"], resultNames=["out"]}
+
+hir.func.extern @ugt_f32 at %t(%a:i32, %b:i32) ->(%out:i1 delay 2){argNames=["a","b","t"], resultNames=["out"]}
+
+hir.func.extern @ult_f32 at %t(%a:i32, %b:i32) ->(%out:i1 delay 2){argNames=["a","b","t"], resultNames=["out"]}
+
+hir.func.extern @neg_f32 at %t(%a:i32) ->(%out:i32){argNames=["a","t"], resultNames=["out"]}
+
+hir.func.extern @select_f32 at %t(%cmp:i32,%a:i32,%b:i32) ->(%out:i32){argNames=["cmp","a","b","t"], resultNames=["out"]}
+
+hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resultNames=["out"]}
+
 
 
   func @unsharpMask(
@@ -18,7 +25,7 @@ hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32)
     %arg1: memref<32x32xf32> {hir.memref.ports = [#bram_w]},
     %arg2: memref<8xf32>     {hir.memref.ports = [#bram_r]}, 
     %arg3: memref<8xf32>     {hir.memref.ports = [#bram_r]}
-  ) attributes {hwAccel,argNames=["img","maskImg","kernelX","kernelY"]} {
+  ) attributes {hwAccel,argNames=["img","mask","kernelX","kernelY"]} {
 
     %cst = arith.constant 0.000000e+00 : f32
     %cst_0 = arith.constant 4.000000e+00 : f32

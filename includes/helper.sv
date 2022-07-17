@@ -252,7 +252,7 @@ endmodule
     input t  , 
     input clk, 
     input rst, 
-    output wire[31:0] out 
+    output wire out 
   );
   lt_f32 inst (
   .aclk(clk),                                  // input wire aclk
@@ -270,7 +270,7 @@ endmodule
     input t  , 
     input clk, 
     input rst, 
-    output wire[31:0] out 
+    output wire out 
   );
   gt_f32 inst (
   .aclk(clk),                                  // input wire aclk
