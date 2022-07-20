@@ -16,7 +16,7 @@ hir.func.extern @neg_f32 at %t(%a:i32) ->(%out:i32){argNames=["a","t"], resultNa
 
 hir.func.extern @select_f32 at %t(%cmp:i32,%a:i32,%b:i32) ->(%out:i32){argNames=["cmp","a","b","t"], resultNames=["out"]}
 
-hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resultNames=["out"]}
+hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resultNames=["out"]}
 
 
 
@@ -32,14 +32,14 @@ hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
     %cst_1 = arith.constant 3.000000e+00 : f32
     %cst_2 = arith.constant 1.000000e-03 : f32
     %0 = memref.alloca(){names=["bram0"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %1 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %2 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %3 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %4 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %5 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %6 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %7 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %8 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %1 = memref.alloca(){names=["bram1"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %2 = memref.alloca(){names=["bram2"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %3 = memref.alloca(){names=["bram3"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %4 = memref.alloca(){names=["bram4"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %5 = memref.alloca(){names=["bram5"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %6 = memref.alloca(){names=["bram6"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %7 = memref.alloca(){names=["bram7"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %8 = memref.alloca(){names=["bram8"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
         %9 = affine.load %arg0[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
@@ -65,8 +65,8 @@ hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
           %13 = arith.addf %12, %11  {result_delays=[11], hir_function=@add_f32} : f32
           affine.store %13, %8[%arg4, %arg5] : memref<32x32xf32>
         }{II=13}
-      }{II=52}
-    }{II=1456}
+      }{II=100}
+    }{II=3200}
     affine.for %arg4 = 0 to 27 {
       affine.for %arg5 = 0 to 27 {
         affine.store %cst, %7[%arg4, %arg5] : memref<32x32xf32>
@@ -78,8 +78,8 @@ hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
           %13 = arith.addf %12, %11  {result_delays=[11], hir_function=@add_f32} : f32
           affine.store %13, %7[%arg4, %arg5] : memref<32x32xf32>
         }{II=13}
-      }{II=52}
-    }{II=1456}
+      }{II=100}
+    }{II=3200}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
         %9 = affine.load %7[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
@@ -107,7 +107,7 @@ hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
         %14 = arith.negf %11  {result_delays=[0],hir_function=@neg_f32} : f32
         %15 = call @select(%13, %11, %14) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
         %16 = arith.cmpf ult, %15, %cst_2  {result_delays=[2],hir_function=@ult_f32} : f32
-        %17 = arith.extsi %16 {result_delays=[0],hir_function=@extsi_i1_f32}: i1 to i32
+        %17 = arith.extsi %16 {result_delays=[0],hir_function=@extsi_i1_i32}: i1 to i32
         %18 = affine.load %1[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
         %19 = affine.load %0[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
         %20 = call @select(%17, %18, %19) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
