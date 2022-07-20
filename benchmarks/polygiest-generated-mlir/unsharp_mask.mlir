@@ -31,7 +31,7 @@ hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
     %cst_0 = arith.constant 4.000000e+00 : f32
     %cst_1 = arith.constant 3.000000e+00 : f32
     %cst_2 = arith.constant 1.000000e-03 : f32
-    %0 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %0 = memref.alloca(){names=["bram0"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
     %1 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
     %2 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
     %3 = memref.alloca(){mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
@@ -103,7 +103,7 @@ hir.func.extern @extsi_i1_f32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
         %10 = affine.load %5[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
         %11 = arith.subf %9, %10  {result_delays=[11],hir_function=@sub_f32} : f32
         %12 = arith.cmpf ugt, %11, %cst  {result_delays=[2],hir_function=@ugt_f32} : f32
-        %13 = arith.extsi %12 {result_delays=[0],hir_function=@extsi_i1_f32}: i1 to i32
+        %13 = arith.extsi %12 {result_delays=[0],hir_function=@extsi_i1_i32}: i1 to i32
         %14 = arith.negf %11  {result_delays=[0],hir_function=@neg_f32} : f32
         %15 = call @select(%13, %11, %14) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
         %16 = arith.cmpf ult, %15, %cst_2  {result_delays=[2],hir_function=@ult_f32} : f32

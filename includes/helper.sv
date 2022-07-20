@@ -304,7 +304,7 @@ module select_f32  (	// unsharp_mask_hir.mlir:237:15
   );
   assign out = cmp[0]?a:b;
 endmodule
-module extsi_i1_f32  (	// unsharp_mask_hir.mlir:231:15
+module extsi_i1_i32  (	// unsharp_mask_hir.mlir:231:15
     input wire a,   
     input wire t,   
     input wire clk, 

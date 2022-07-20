@@ -3,6 +3,7 @@ from PIL import Image,ImageOps
 import bitstring
 
 def floatToBits(f):
+    f= 1.0 #FIXME: remove this 
     f1 = bitstring.BitArray(float=f, length=32)
     return f1.bin
 
@@ -21,4 +22,3 @@ with open('kernel.mem','w') as f:
             f.write(floatToBits(float(kernel[i])))
             f.write("\n")
 
-import pdb;pdb.set_trace()
