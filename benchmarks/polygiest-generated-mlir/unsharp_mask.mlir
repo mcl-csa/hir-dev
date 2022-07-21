@@ -27,6 +27,7 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
     %arg3: memref<8xf32>     {hir.memref.ports = [#bram_r]}
   ) attributes {hwAccel,argNames=["img","mask","kernelX","kernelY"]} {
 
+    %c0 = arith.constant 0:index
     %cst = arith.constant 0.000000e+00 : f32
     %cst_0 = arith.constant 4.000000e+00 : f32
     %cst_1 = arith.constant 3.000000e+00 : f32
@@ -56,28 +57,35 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
     }{II=36}
     affine.for %arg4 = 0 to 27 {
       affine.for %arg5 = 0 to 27 {
-        affine.store %cst, %8[%arg4, %arg5] : memref<32x32xf32>
+        %reg = memref.alloca(){names=["reg_acc_convY"],mem_kind="reg",hir.memref.ports = [#reg_r,#reg_w]}: memref<1xf32>
+        affine.store %cst, %reg[%c0] : memref<1xf32>
         affine.for %arg6 = 0 to 5 {
           %9 = affine.load %arg2[%arg6] {result_delays=[1]} : memref<8xf32>
           %10 = affine.load %3[%arg4, %arg5 + %arg6] {result_delays=[1]} : memref<32x32xf32>
           %11 = arith.mulf %9, %10  {result_delays=[8], hir_function=@mul_f32} : f32
-          %12 = affine.load %8[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
+          %12 = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
           %13 = arith.addf %12, %11  {result_delays=[11], hir_function=@add_f32} : f32
-          affine.store %13, %8[%arg4, %arg5] : memref<32x32xf32>
+          affine.store %13, %reg[%c0] : memref<1xf32>
         }{II=13}
+        %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
+        affine.store %acc, %8[%arg4, %arg5] : memref<32x32xf32>
       }{II=100}
     }{II=3200}
+
     affine.for %arg4 = 0 to 27 {
       affine.for %arg5 = 0 to 27 {
-        affine.store %cst, %7[%arg4, %arg5] : memref<32x32xf32>
+        %reg = memref.alloca(){names=["reg_acc_convY"],mem_kind="reg",hir.memref.ports = [#reg_r,#reg_w]}: memref<1xf32>
+        affine.store %cst, %reg[%c0] : memref<1xf32>
         affine.for %arg6 = 0 to 5 {
           %9 = affine.load %arg3[%arg6] {result_delays=[1]} : memref<8xf32>
           %10 = affine.load %8[%arg4 + %arg6, %arg5] {result_delays=[1]} : memref<32x32xf32>
           %11 = arith.mulf %9, %10  {result_delays=[8], hir_function=@mul_f32} : f32
-          %12 = affine.load %7[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
+          %12 = affine.load %reg[%c0] {result_delays=[1]} : memref<1xf32>
           %13 = arith.addf %12, %11  {result_delays=[11], hir_function=@add_f32} : f32
-          affine.store %13, %7[%arg4, %arg5] : memref<32x32xf32>
+          affine.store %13, %reg[%c0] : memref<1xf32>
         }{II=13}
+        %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
+        affine.store %acc, %7[%arg4, %arg5] : memref<32x32xf32>
       }{II=100}
     }{II=3200}
     affine.for %arg4 = 0 to 32 {
