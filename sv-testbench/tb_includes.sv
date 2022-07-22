@@ -70,7 +70,7 @@ module adder_f32 (
     output wire m_axis_result_tdata
   );
     assign m_axis_result_tvalid = s_axis_a_tvalid & s_axis_b_tvalid;
-    shortreal a = s_axis_a_tdata;
+     a = s_axis_a_tdata;
     shortreal b = s_axis_b_tdata;
     shortreal res = a+b;
     wire[31:0] tdata = $realtobits(res);
