@@ -3,7 +3,6 @@ from PIL import Image,ImageOps
 import bitstring
 
 def floatToBits(f):
-    f= 1.0 #FIXME: remove this 
     f1 = bitstring.BitArray(float=f, length=32)
     return f1.bin
 
@@ -13,12 +12,14 @@ np_frame = np.array(im_gray)
 with open('lenna.mem','w') as f:
     for i in range(np_frame.shape[0]):
         for j in range(np_frame.shape[1]):
-            f.write(floatToBits(float(np_frame[i,j])))
+            #f.write(floatToBits(float(np_frame[i,j])))
+            f.write(floatToBits(float(j)))
             f.write("\n")
 
 kernel = [1.0/16,4.0/16,8.0/16,4.0/16,1.0/16,0.0,0.0,0.0]
 with open('kernel.mem','w') as f:
     for i in range(len(kernel)):
-            f.write(floatToBits(float(kernel[i])))
+            #f.write(floatToBits(float(kernel[i])))
+            f.write(floatToBits(float(i)))
             f.write("\n")
 
