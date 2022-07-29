@@ -57,7 +57,7 @@ unsharpMask_hir inst(
   .kernelX_p0_addr_en     (                     ),
   .kernelX_p0_addr_data   (kernelX_p0_addr_data ),
   .kernelX_p0_rd_en       (kernelX_p0_rd_en     ),
-  .kernelY_p0_rd_data     (kernelX_p0_rd_data   ),
+  .kernelY_p0_rd_data     (kernelY_p0_rd_data   ),
   .kernelY_p0_addr_en     (                     ),
   .kernelY_p0_addr_data   (kernelY_p0_addr_data ),
   .kernelY_p0_rd_en       (kernelY_p0_rd_en     ),

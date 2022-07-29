@@ -4,7 +4,7 @@ static float abs(float v){
 	return v>0?v:-v;
 }
 
-inline void split (float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IMG_SIZE], float input[IMG_SIZE][IMG_SIZE]){
+ void split (float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IMG_SIZE], float input[IMG_SIZE][IMG_SIZE]){
 	for(int i=0;i<IMG_SIZE;i++){
 		for(int j=0;j<IMG_SIZE;j++){
 			output0[i][j] = input[i][j];				
@@ -13,7 +13,7 @@ inline void split (float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IM
 	}
 }
 
-inline void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
+ void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
 	for(int i=0;i<IMG_SIZE-KERNEL_SIZE;i++){
 #pragma HLS PIPELINE off
 		for(int j=0;j<IMG_SIZE-KERNEL_SIZE;j++){
@@ -27,7 +27,7 @@ inline void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE
 	}
 }
 
-inline void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
+ void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float kernel[KERNEL_SIZE]){
 	for(int i=0;i<IMG_SIZE-KERNEL_SIZE;i++){
 #pragma HLS PIPELINE off
 		for(int j=0;j<IMG_SIZE-KERNEL_SIZE;j++){
@@ -41,7 +41,7 @@ inline void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE
 	}
 }
 
-inline void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float blury[IMG_SIZE][IMG_SIZE], float weight){
+ void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float blury[IMG_SIZE][IMG_SIZE], float weight){
 	for(int i=0;i<IMG_SIZE;i++){
 		for(int j=0;j<IMG_SIZE;j++){
 			 output[i][j] =  (1+weight)*img[i][j] - weight*blury[i][j];
@@ -49,7 +49,7 @@ inline void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SI
 	}
 }
 
-inline void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float blury[IMG_SIZE][IMG_SIZE],float sharp[IMG_SIZE][IMG_SIZE], float threshold){
+ void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE], float blury[IMG_SIZE][IMG_SIZE],float sharp[IMG_SIZE][IMG_SIZE], float threshold){
 	for(int i=0;i<IMG_SIZE;i++){
 		for(int j=0;j<IMG_SIZE;j++){
 			 output[i][j] =  (abs(img[i][j]-blury[i][j])<threshold?img[i][j]:sharp[i][j]);

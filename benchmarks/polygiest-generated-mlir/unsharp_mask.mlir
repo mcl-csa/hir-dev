@@ -3,10 +3,10 @@
 #bram_w = {"wr_latency"=1}
 #reg_w = {"wr_latency"=1}
 
-hir.func.extern @mul_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 8) {argNames=["a","b","t"], resultNames=["out"]}
-hir.func.extern @add_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 11){argNames=["a","b","t"], resultNames=["out"]}
+hir.func.extern @mul_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 4) {argNames=["a","b","t"], resultNames=["out"]}
+hir.func.extern @add_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 7){argNames=["a","b","t"], resultNames=["out"]}
 
-hir.func.extern @sub_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 11){argNames=["a","b","t"], resultNames=["out"]}
+hir.func.extern @sub_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 7){argNames=["a","b","t"], resultNames=["out"]}
 
 hir.func.extern @ugt_f32 at %t(%a:i32, %b:i32) ->(%out:i1 delay 2){argNames=["a","b","t"], resultNames=["out"]}
 
@@ -62,15 +62,15 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
         affine.for %arg6 = 0 to 5 {
           %9 = affine.load %arg2[%arg6] {result_delays=[1]} : memref<8xf32>
           %10 = affine.load %3[%arg4, %arg5 + %arg6] {result_delays=[1]} : memref<32x32xf32>
-          %11 = arith.mulf %9, %10  {result_delays=[8], hir_function=@mul_f32} : f32
+          %11 = arith.mulf %9, %10  {result_delays=[4], hir_function=@mul_f32} : f32
           %12 = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
-          %13 = arith.addf %12, %11  {result_delays=[11], hir_function=@add_f32} : f32
+          %13 = arith.addf %12, %11  {result_delays=[7], hir_function=@add_f32} : f32
           affine.store %13, %reg[%c0] : memref<1xf32>
-        }{II=13}
+        }{II=8}
         %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
         affine.store %acc, %8[%arg4, %arg5] : memref<32x32xf32>
-      }{II=100}
-    }{II=3200}
+      }{II=50}
+    }{II=1500}
 
     affine.for %arg4 = 0 to 27 {
       affine.for %arg5 = 0 to 27 {
@@ -79,15 +79,15 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
         affine.for %arg6 = 0 to 5 {
           %9 = affine.load %arg3[%arg6] {result_delays=[1]} : memref<8xf32>
           %10 = affine.load %8[%arg4 + %arg6, %arg5] {result_delays=[1]} : memref<32x32xf32>
-          %11 = arith.mulf %9, %10  {result_delays=[8], hir_function=@mul_f32} : f32
-          %12 = affine.load %reg[%c0] {result_delays=[1]} : memref<1xf32>
-          %13 = arith.addf %12, %11  {result_delays=[11], hir_function=@add_f32} : f32
+          %11 = arith.mulf %9, %10  {result_delays=[4], hir_function=@mul_f32} : f32
+          %12 = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
+          %13 = arith.addf %12, %11  {result_delays=[7], hir_function=@add_f32} : f32
           affine.store %13, %reg[%c0] : memref<1xf32>
-        }{II=13}
+        }{II=8}
         %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
         affine.store %acc, %7[%arg4, %arg5] : memref<32x32xf32>
-      }{II=100}
-    }{II=3200}
+      }{II=50}
+    }{II=1500}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
         %9 = affine.load %7[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
@@ -98,10 +98,10 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
         %9 = affine.load %2[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %10 = arith.mulf %cst_0, %9  {result_delays=[8], hir_function=@mul_f32} : f32
+        %10 = arith.mulf %cst_0, %9  {result_delays=[4], hir_function=@mul_f32} : f32
         %11 = affine.load %6[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %12 = arith.mulf %cst_1, %11  {result_delays=[8], hir_function=@mul_f32} : f32
-        %13 = arith.subf %10, %12  {result_delays=[11],hir_function=@sub_f32} : f32
+        %12 = arith.mulf %cst_1, %11  {result_delays=[4], hir_function=@mul_f32} : f32
+        %13 = arith.subf %10, %12  {result_delays=[7],hir_function=@sub_f32} : f32
         affine.store %13, %0[%arg4, %arg5] : memref<32x32xf32>
       }{II=1}
     }{II=36}
@@ -109,7 +109,7 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
       affine.for %arg5 = 0 to 32 {
         %9 = affine.load %1[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
         %10 = affine.load %5[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %11 = arith.subf %9, %10  {result_delays=[11],hir_function=@sub_f32} : f32
+        %11 = arith.subf %9, %10  {result_delays=[7],hir_function=@sub_f32} : f32
         %12 = arith.cmpf ugt, %11, %cst  {result_delays=[2],hir_function=@ugt_f32} : f32
         %13 = arith.extsi %12 {result_delays=[0],hir_function=@extsi_i1_i32}: i1 to i32
         %14 = arith.negf %11  {result_delays=[0],hir_function=@neg_f32} : f32
