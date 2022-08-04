@@ -69,8 +69,8 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
         }{II=8}
         %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
         affine.store %acc, %8[%arg4, %arg5] : memref<32x32xf32>
-      }{II=50}
-    }{II=1500}
+      }{II=56}
+    }{II=1680}
 
     affine.for %arg4 = 0 to 27 {
       affine.for %arg5 = 0 to 27 {
@@ -86,8 +86,8 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
         }{II=8}
         %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
         affine.store %acc, %7[%arg4, %arg5] : memref<32x32xf32>
-      }{II=50}
-    }{II=1500}
+      }{II=56}
+    }{II=1680}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
         %9 = affine.load %7[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>

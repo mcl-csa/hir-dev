@@ -1,7 +1,7 @@
 `ifndef HIR_HELPER
   `define HIR_HELPER
   //`default_nettype none
-module reg_r0_w1 #(
+  module reg_r0_w1 #(
     ELEMENT_WIDTH=64'd1
   ) (	
     input wire p0_rd_en,   
@@ -162,31 +162,31 @@ module reg_r0_w1 #(
       result <= product;
     end
   endmodule
-  
- module add_i32(
- output wire[31:0] out,
- input wire[31:0] a,
- input wire [31:0] b,
- input wire t,
- input wire clk,
- input wire rst
+
+  module add_i32(
+    output wire[31:0] out,
+    input wire[31:0] a,
+    input wire [31:0] b,
+    input wire t,
+    input wire clk,
+    input wire rst
   );
-  assign out = a+b;
- endmodule
- 
- module mul_i32(
- output reg[31:0] out,
- input wire[31:0] a,
- input wire [31:0] b,
- input wire t,
- input wire clk,
- input wire rst
+    assign out = a+b;
+  endmodule
+
+  module mul_i32(
+    output reg[31:0] out,
+    input wire[31:0] a,
+    input wire [31:0] b,
+    input wire t,
+    input wire clk,
+    input wire rst
   );
-  wire [31:0] prod;
-  assign prod = a*b;
-  always@(posedge clk)begin
-    out <=prod;
-  end
+    wire [31:0] prod;
+    assign prod = a*b;
+    always@(posedge clk)begin
+      out <=prod;
+    end
   endmodule
 
   module mul_f32(
@@ -197,16 +197,16 @@ module reg_r0_w1 #(
     input rst, 
     output wire[31:0] out 
   );
-  multiplier_f32 inst (
-  .aclk(clk),                                  // input wire aclk
-  .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
-  .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
-  .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
-  .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
-  .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-  .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
-  );
-endmodule
+    multiplier_f32 inst (
+      .aclk(clk),                                  // input wire aclk
+      .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
+      .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
+      .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
+      .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
+      .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
+      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+    );
+  endmodule
 
   module add_f32(
     input wire[31:0] a ,
@@ -216,16 +216,16 @@ endmodule
     input rst, 
     output wire[31:0] out 
   );
-  adder_f32 inst (
-  .aclk(clk),                                  // input wire aclk
-  .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
-  .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
-  .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
-  .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
-  .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-  .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
-  );
-endmodule
+    adder_f32 inst (
+      .aclk(clk),                                  // input wire aclk
+      .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
+      .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
+      .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
+      .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
+      .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
+      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+    );
+  endmodule
 
 
   module sub_f32(
@@ -236,15 +236,15 @@ endmodule
     input rst, 
     output wire[31:0] out 
   );
-  subtract_f32 inst (
-  .aclk(clk),                                  // input wire aclk
-  .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
-  .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
-  .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
-  .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
-  .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-  .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
-  );
+    subtract_f32 inst (
+      .aclk(clk),                                  // input wire aclk
+      .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
+      .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
+      .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
+      .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
+      .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
+      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+    );
   endmodule
   module ult_f32(
     input wire[31:0] a ,
@@ -254,16 +254,16 @@ endmodule
     input rst, 
     output wire out 
   );
-  lt_f32 inst (
-  .aclk(clk),                                  // input wire aclk
-  .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
-  .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
-  .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
-  .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
-  .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-  .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
-  );
-endmodule
+    lt_f32 inst (
+      .aclk(clk),                                  // input wire aclk
+      .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
+      .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
+      .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
+      .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
+      .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
+      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+    );
+  endmodule
   module ugt_f32(
     input wire[31:0] a ,
     input  wire[31:0] b , 
@@ -272,45 +272,45 @@ endmodule
     input rst, 
     output wire out 
   );
-  gt_f32 inst (
-  .aclk(clk),                                  // input wire aclk
-  .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
-  .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
-  .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
-  .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
-  .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-  .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
-  );
-endmodule
+    gt_f32 inst (
+      .aclk(clk),                                  // input wire aclk
+      .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
+      .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
+      .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
+      .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
+      .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
+      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+    );
+  endmodule
 
-module neg_f32(
-  input wire[31:0] a,
-  output wire[31:0] out,
-  input clk,
-  input rst,
-  input t);
-  assign out[30:0]=a[30:0];
-  assign out[31]=!a[31];
-endmodule
+  module neg_f32(
+    input wire[31:0] a,
+    output wire[31:0] out,
+    input clk,
+    input rst,
+    input t);
+    assign out[30:0]=a[30:0];
+    assign out[31]=!a[31];
+  endmodule
 
-module select_f32  (	// unsharp_mask_hir.mlir:237:15
+  module select_f32  (	// unsharp_mask_hir.mlir:237:15
     input wire[31:0] cmp, 
-  input wire[31:0] a,   
+    input wire[31:0] a,   
     input wire[31:0] b,   
     input wire t,   
     input wire clk, 
     input wire rst, 
     output wire[31:0] out 
   );
-  assign out = cmp[0]?a:b;
-endmodule
-module extsi_i1_i32  (	// unsharp_mask_hir.mlir:231:15
+    assign out = cmp[0]?a:b;
+  endmodule
+  module extsi_i1_i32  (	// unsharp_mask_hir.mlir:231:15
     input wire a,   
     input wire t,   
     input wire clk, 
     input wire rst, 
     output wire[31:0] out 
   );
-  assign out = {31'b0,a};
- endmodule
+    assign out = {31'b0,a};
+  endmodule
 `endif
