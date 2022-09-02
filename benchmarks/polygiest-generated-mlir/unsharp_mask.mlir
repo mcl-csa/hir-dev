@@ -20,7 +20,7 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
 
 
 
-  func @unsharpMask(
+  func.func @unsharpMask(
     %arg0: memref<32x32xf32> {hir.memref.ports = [#bram_r]},
     %arg1: memref<32x32xf32> {hir.memref.ports = [#bram_w]},
     %arg2: memref<8xf32>     {hir.memref.ports = [#bram_r]}, 
@@ -113,16 +113,16 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
         %12 = arith.cmpf ugt, %11, %cst  {result_delays=[2],hir_function=@ugt_f32} : f32
         %13 = arith.extsi %12 {result_delays=[0],hir_function=@extsi_i1_i32}: i1 to i32
         %14 = arith.negf %11  {result_delays=[0],hir_function=@neg_f32} : f32
-        %15 = call @select(%13, %11, %14) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
+        %15 = func.call @select(%13, %11, %14) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
         %16 = arith.cmpf ult, %15, %cst_2  {result_delays=[2],hir_function=@ult_f32} : f32
         %17 = arith.extsi %16 {result_delays=[0],hir_function=@extsi_i1_i32}: i1 to i32
         %18 = affine.load %1[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
         %19 = affine.load %0[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %20 = call @select(%17, %18, %19) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
+        %20 = func.call @select(%17, %18, %19) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
         affine.store %20, %arg1[%arg4, %arg5] : memref<32x32xf32>
       }{II=1}
     }{II=36}
     return
   }
 
-  func private @select(i32, f32, f32) -> f32 attributes {llvm.linkage = #llvm.linkage<external>}
+  func.func private @select(i32, f32, f32) -> f32 attributes {llvm.linkage = #llvm.linkage<external>}
