@@ -20,7 +20,7 @@ hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resu
 
 
 
-  func.func @unsharpMask(
+  func.func @unsharp_mask_hir(
     %arg0: memref<32x32xf32> {hir.memref.ports = [#bram_r]},
     %arg1: memref<32x32xf32> {hir.memref.ports = [#bram_w]},
     %arg2: memref<8xf32>     {hir.memref.ports = [#bram_r]}, 
