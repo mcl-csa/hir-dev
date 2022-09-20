@@ -17,42 +17,51 @@ function(add_vivado_ip_target name rel_ip_path)
   cmake_path (GET ip_path STEM LAST_ONLY ip_name)
   message (STATUS ${ip_name})
   set (xci_path ${CMAKE_CURRENT_BINARY_DIR}/${ip_name}/${ip_name}.xci)
+  set (logfile ${CMAKE_CURRENT_BINARY_DIR}/${name}.log)
   get_property(part_name GLOBAL PROPERTY part_name)
+  set(create_ip_tcl ${CMAKE_SOURCE_DIR}/benchmarks/common/tcl/create_ip.tcl)
+
+  get_property(constraint_file GLOBAL PROPERTY constraint_file)
   add_custom_command(
-    OUTPUT  ${xci_path}
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tcl/create_ip.tcl ${ip_path}
-    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${CMAKE_SOURCE_DIR}/benchmarks/common/tcl/create_ip.tcl -tclargs ${part_name} ${ip_name} ${ip_path} > ${CMAKE_CURRENT_BINARY_DIR}/${ip_name}.log
-    )
+    OUTPUT  ${xci_path} ${logfile}
+    DEPENDS ${create_ip_tcl} ${constraint_file} ${ip_path}
+    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${create_ip_tcl} -tclargs ${part_name} ${constraint_file} ${ip_name} ${ip_path} > ${logfile}
+  )
 
   add_custom_target(
     ${name}
-    DEPENDS ${xci_path}
-    )
+    DEPENDS ${xci_path} ${logfile}
+  )
+
   set_property(GLOBAL PROPERTY ${name}_XCI ${xci_path})
+  set_target_properties(${name}  PROPERTIES OUTPUT_FILES ${xci_path} )
 endfunction()
 
-function (add_affine_benchmark name)
-  cmake_parse_arguments(ARGS "" "MLIR"
-                          "SV_INCLUDES;VIVADO_IPS" ${ARGN} )
-  cmake_path (GET ARGS_MLIR STEM LAST_ONLY affine_name)
-  cmake_path (GET ARGS_MLIR PARENT_PATH rel_affine_dir)
-  set (affine_path ${CMAKE_CURRENT_SOURCE_DIR}/${ARGS_MLIR})
-  set (hir_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_affine_dir}/${affine_name}.hir.mlir)
-  set (hir_opt_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_affine_dir}/${affine_name}_opt.hir.mlir)
-  set (hir_simplified_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_affine_dir}/${affine_name}_simplified.hir.mlir)
-  set (mlir_hw_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_affine_dir}/${affine_name}.hw.mlir)
-  set (sv_dir ${CMAKE_CURRENT_BINARY_DIR}/${rel_affine_dir})
-  set (output_sv ${sv_dir}/${affine_name}.sv)
-  set (vivado_dir ${CMAKE_CURRENT_BINARY_DIR}/${name}_vivado_prj)
-  set (vivado_xpr ${vivado_dir}/${affine_name}.xpr)
-  set (gen_hir_design_tcl ${CMAKE_SOURCE_DIR}/benchmarks/common/tcl/gen_hir_design.tcl)
+function (add_sv_target name)
+  cmake_parse_arguments(ARG "" "MLIR"
+                          "OUTPUT_SV" ${ARGN} )
+  if(NOT ARG_MLIR)  
+    message(FATAL_ERROR "Could not find any sv files for mlir target ${mlir_target}")
+  endif()
 
+  if(NOT ARG_OUTPUT_SV)  
+    message(FATAL_ERROR "Could not find any sv files for mlir target ${mlir_target}")
+  endif()
+
+  cmake_path (GET ARG_MLIR STEM LAST_ONLY mlir_name)
+  cmake_path (GET ARG_MLIR PARENT_PATH rel_mlir_dir)
+  set (mlir_path ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_MLIR})
+  set (hir_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}.hir.mlir)
+  set (hir_opt_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}_opt.hir.mlir)
+  set (hir_simplified_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}_simplified.hir.mlir)
+  set (mlir_hw_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}.hw.mlir)
+  set (sv_dir ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir})
   get_property(circt_opt GLOBAL PROPERTY circt_opt_path)
 
   add_custom_command(
     OUTPUT ${hir_path}
-    DEPENDS ${affine_path} circt 
-    COMMAND ${circt_opt} -affine-to-hir ${affine_path} > ${hir_path}
+    DEPENDS ${mlir_path} circt 
+    COMMAND ${circt_opt} -affine-to-hir ${mlir_path} > ${hir_path}
   )
 
   add_custom_command(
@@ -73,37 +82,64 @@ function (add_affine_benchmark name)
     COMMAND ${circt_opt} -hir-to-hw ${hir_simplified_path} > ${mlir_hw_path}
   )
 
+  set(ABS_OUTPUT_SV "")
+  foreach(rel_path ${ARG_OUTPUT_SV})
+    list(APPEND ABS_OUTPUT_SV ${CMAKE_CURRENT_BINARY_DIR}/${rel_path})
+  endforeach()
+
   add_custom_command(
-    OUTPUT ${output_sv}
+    OUTPUT ${ABS_OUTPUT_SV}
     DEPENDS ${mlir_hw_path} circt 
     COMMAND ${circt_opt} -export-split-verilog='dir-name=${sv_dir}' ${mlir_hw_path} >/dev/null
-  )
-  file(REMOVE ${sv_dir}/extern_modules.sv)
-  file(GLOB SV_FILES ${sv_dir}/*.sv)
-  get_property(constraint_file GLOBAL PROPERTY constraint_file)
-  get_property(part_name GLOBAL PROPERTY part_name)
-  
-  set(ABS_SV_INCLUDES "")
-  foreach(rel_path ${ARGS_SV_INCLUDES})
-    list(APPEND ABS_SV_INCLUDES ${CMAKE_CURRENT_SOURCE_DIR}/${rel_path})
-  endforeach()
-
-  set(VIVADO_IP_XCIS "")
-  foreach(ip ${ARGS_VIVADO_IPS})
-    get_property(ip_path GLOBAL PROPERTY ${ip}_XCI)
-    list(APPEND VIVADO_IP_XCIS ${ip_path})
-  endforeach()
-
-  add_custom_command(
-    OUTPUT ${vivado_xpr}
-    DEPENDS ${output_sv} circt ${ARGS_VIVADO_IPS} ${gen_hir_design_tcl}
-    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${gen_hir_design_tcl} -tclargs ${part_name} ${constraint_file} ${vivado_dir} ${affine_name} ${SV_FILES} ${ABS_SV_INCLUDES} ${VIVADO_IP_XCIS} > ${vivado_dir}/${affine_name}.log
-    #COMMAND echo -nolog -nojournal -mode batch -source ${gen_hir_design_tcl} -tclargs ${part_name} ${constraint_file} ${vivado_dir} ${affine_name} ${SV_FILES} ${ABS_SV_INCLUDES} ${VIVADO_IP_XCIS} > ${vivado_dir}/${affine_name}.log
   )
 
   add_custom_target(
     ${name}
-    DEPENDS ${vivado_xpr}
+    DEPENDS ${ABS_OUTPUT_SV}
+  )
+  set_target_properties(${name}  PROPERTIES OUTPUT_FILES ${ABS_OUTPUT_SV} )
+endfunction()
+
+function (add_vivado_project_target name)
+  cmake_parse_arguments(ARG "" "TOP_MODULE"
+                          "DEPENDENCE;INCLUDES" ${ARGN} )
+
+  if(NOT ARG_TOP_MODULE)  
+    message(FATAL_ERROR "Must specify TOP_MODULE ${ARG_TOP_MODULE}.")
+  endif()
+
+  if(NOT ARG_DEPENDENCE)  
+    message(FATAL_ERROR "Could not find any dependence.")
+  endif()
+
+  get_property(constraint_file GLOBAL PROPERTY constraint_file)
+  get_property(part_name GLOBAL PROPERTY part_name)
+  set (vivado_dir ${CMAKE_CURRENT_BINARY_DIR}/${name})
+  set (vivado_xpr ${vivado_dir}/${ARG_TOP_MODULE}.xpr)
+  set (gen_hir_design_tcl ${CMAKE_SOURCE_DIR}/benchmarks/common/tcl/gen_hir_design.tcl)
+
+  set(SRC_FILES "")
+  foreach(include_file ${ARG_INCLUDES})
+    list(APPEND SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${include_file})
+  endforeach()
+
+  foreach( target ${ARG_DEPENDENCE})
+    get_target_property(OUTPUT_FILES ${target} OUTPUT_FILES)
+    if(NOT OUTPUT_FILES)  
+      message(FATAL_ERROR "Could not find any sv or xci files output or mlir target}")
+    endif()
+    list(APPEND SRC_FILES ${OUTPUT_FILES})
+  endforeach()
+
+  set (logfile ${CMAKE_CURRENT_BINARY_DIR}/${name}.log)
+  add_custom_command(
+    OUTPUT ${vivado_xpr} ${logfile}
+    DEPENDS  ${VIVADO} ${gen_hir_design_tcl} ${constraint_file} ${SRC_FILES}
+    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${gen_hir_design_tcl} -tclargs ${part_name} ${constraint_file} ${vivado_dir} ${ARG_TOP_MODULE} ${SRC_FILES} > ${logfile}
   )
 
+  add_custom_target(
+    ${name}
+    DEPENDS ${vivado_xpr} ${logfile}
+  )
 endfunction()

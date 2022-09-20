@@ -1,9 +1,3 @@
-#inputs to the script
-#   - partName.
-#   - input top level system-verilog file path.
-#   - list of vivado ips.
-#   - list of extra include sv files.
-
 # Usage: vivado -mode tcl -source gen_hir_design.tcl --tclargs xc7vx690tffg1761-2 top_level.sv includes/helper.sv ip.xci
 
 set partName [lindex $argv 0]
@@ -36,16 +30,14 @@ if { [llength $files] != 0 } {
 }
 
 create_project -part $partName  $top_module_name $output_dir
-#create_fileset -srcset sources_1
-#create_fileset -constrset constrs_1
-
-#add_files -fileset sources $sv_files
+set_msg_config -severity {CRITICAL WARNING} -new_severity ERROR
 foreach {sv_path} $sv_files {
     puts $sv_path
     add_files -fileset sources_1 $sv_path
 }
 
 add_files -fileset constrs_1  $constraints_xdc
+read_xdc $constraints_xdc -mode out_of_context
 
 if {[llength $xci_files]} {
     foreach {xci_path} $xci_files {
@@ -60,18 +52,17 @@ if {[llength $xci_files]} {
 }
 set obj [get_filesets sources_1]
 set_property -name "top" -value $top_module_name -objects $obj
-#set_property -name "top_auto_set" -value "0" -objects $obj
-
+set_property -name "top_auto_set" -value "0" -objects $obj
 update_compile_order -fileset sources_1
-generate_target all [get_ips]
 
-#create_run -name synth_1 -part $partName -srcset sources_1 -flow {Vivado Synthesis 2022} -strategy "Vivado Synthesis Defaults" -report_strategy {No Reports} -constrset constrs_1
-launch_runs synth_1 -jobs 1
-wait_on_run synth_1
-set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
-launch_runs impl_1 -jobs 1
-wait_on_run impl_1
-open_run impl_1
-report_utilization -hierarchical -file $output_dir/${top_module_name}_utilization.rpt
-close_design
+#generate_target all [get_ips]
+#launch_runs synth_1 -jobs 1
+#wait_on_run synth_1
+
+#set_property STEPS.PHYS_OPT_DESIGN.IS_ENABLED true [get_runs impl_1]
+#launch_runs impl_1 -jobs 1
+#wait_on_run impl_1
+#open_run impl_1
+#report_utilization -hierarchical -file $output_dir/${top_module_name}_utilization.rpt
+#close_design
 close_project

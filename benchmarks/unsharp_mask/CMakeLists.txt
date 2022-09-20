@@ -1,16 +1,24 @@
-add_affine_benchmark(unsharp_mask 
+add_sv_target(unsharp_mask 
+    MLIR 
+    src/mlir/unsharp_mask_hir.mlir
 
-MLIR 
-src/mlir/unsharp_mask_hir.mlir
+    OUTPUT_SV
+    src/mlir/unsharp_mask_hir.sv
+)
 
-SV_INCLUDES
-../../includes/helper.sv
-../../includes/xil_primitives.sv
+add_vivado_project_target(unsharp_mask_prj
+    TOP_MODULE
+    unsharp_mask_hir
 
-VIVADO_IPS
-ADD_F32
-SUB_F32
-MUL_F32
-GT_F32 
-LT_F32 
+    DEPENDENCE
+    ADD_F32
+    SUB_F32
+    MUL_F32
+    GT_F32 
+    LT_F32 
+    unsharp_mask
+
+    INCLUDES
+    ../../includes/helper.sv
+    ../../includes/xil_primitives.sv
 )

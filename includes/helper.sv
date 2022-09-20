@@ -246,6 +246,7 @@
       .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
     );
   endmodule
+  
   module ult_f32(
     input wire[31:0] a ,
     input  wire[31:0] b , 
@@ -254,6 +255,7 @@
     input rst, 
     output wire out 
   );
+  wire[7:0] outp;
     lt_f32 inst (
       .aclk(clk),                                  // input wire aclk
       .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
@@ -261,9 +263,11 @@
       .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
       .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
       .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+      .m_axis_result_tdata(outp)    // output wire [31 : 0] m_axis_result_tdata
     );
+  assign out = outp[0];
   endmodule
+  
   module ugt_f32(
     input wire[31:0] a ,
     input  wire[31:0] b , 
@@ -272,6 +276,7 @@
     input rst, 
     output wire out 
   );
+    wire[7:0] outp;
     gt_f32 inst (
       .aclk(clk),                                  // input wire aclk
       .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
@@ -279,8 +284,9 @@
       .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
       .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
       .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+      .m_axis_result_tdata(outp)    // output wire [31 : 0] m_axis_result_tdata
     );
+  assign out = outp[0];
   endmodule
 
   module neg_f32(
@@ -288,7 +294,8 @@
     output wire[31:0] out,
     input clk,
     input rst,
-    input t);
+    input t
+  );  
     assign out[30:0]=a[30:0];
     assign out[31]=!a[31];
   endmodule

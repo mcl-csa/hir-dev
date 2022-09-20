@@ -1,11 +1,12 @@
-if {$argc != 3} {
-    error "create_ip.tcl expects three argument - fpga part name, name and path of the ip's tcl proc."
+if {$argc != 4} {
+    error "create_ip.tcl expects three argument - fpga_part_name, constaint, name and path of the ip's tcl proc."
 }
 set partName [lindex $argv 0]
+set constraints_xdc [lindex $argv 1]
+set ip_name [lindex $argv 2]
+set ip_path [lindex $argv 3]
 set outputDir .
 
-set ip_name [lindex $argv 1]
-set ip_path [lindex $argv 2]
 source $ip_path
 file delete -force -- $outputDir/$ip_name
 
