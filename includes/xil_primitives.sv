@@ -2,7 +2,7 @@
 `ifndef HIR_XIL_PRIMITIVES
 `define HIR_XIL_PRIMITIVES
 
-module bram_r1_w1#(ADDR_WIDTH,ELEMENT_WIDTH=16) (
+module bram_r1_w1#(ADDR_WIDTH=4,ELEMENT_WIDTH=16) (
  input wire p0_addr_en,
  input wire [ADDR_WIDTH-1:0] p0_addr_data,
  input wire p0_rd_en,

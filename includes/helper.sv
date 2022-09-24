@@ -309,7 +309,8 @@
     input wire rst, 
     output wire[31:0] out 
   );
-    assign out = cmp[0]?a:b;
+    wire v = cmp[0];
+    assign out = v?a:b;
   endmodule
   module extsi_i1_i32  (	// unsharp_mask_hir.mlir:231:15
     input wire a,   
