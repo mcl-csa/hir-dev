@@ -3,10 +3,10 @@
 #bram_w = {"wr_latency"=1}
 #reg_w = {"wr_latency"=1}
 
-hir.func.extern @mul_i32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 1)
-hir.func.extern @add_i32 at %t(%a:i32, %b:i32) ->(%out:i32)
+hir.func.extern @mul_i32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 1) {argNames = ["a","b","t"],resultNames=["out"]}
+hir.func.extern @add_i32 at %t(%a:i32, %b:i32) ->(%out:i32){argNames = ["a","b","t"],resultNames=["out"]}
 
-func @gesummv(
+func.func @gesummv_hir(
 %arg0: i32{hir.delay=0} ,
 %arg1: i32{hir.delay=0} ,
 %arg2: memref<8xi32>   {hir.memref.ports=[#bram_w]} ,

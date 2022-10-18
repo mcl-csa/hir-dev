@@ -1,2 +1,3 @@
 {
+    "mlir.server_path": "/home/kingshuk/Git_Clones/hir-dev/circt/build/bin/circt-lsp-server"
 }

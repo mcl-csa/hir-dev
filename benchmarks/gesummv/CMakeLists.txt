@@ -1,22 +1,17 @@
 add_sv_target(gesummv 
     MLIR 
-    src/mlir/unsharp_mask_hir.mlir
+    src/mlir/gesummv_hir.mlir
 
     OUTPUT_SV
-    src/mlir/unsharp_mask_hir.sv
+    src/mlir/gesummv_hir.sv
 )
 
-add_vivado_project_target(unsharp_mask_prj
+add_vivado_project_target(gesummv_prj
     TOP_MODULE
-    unsharp_mask_hir
+    gesummv_hir
 
     DEPENDENCE
-    ADD_F32
-    SUB_F32
-    MUL_F32
-    GT_F32 
-    LT_F32 
-    unsharp_mask
+    gesummv
 
     INCLUDES
     ../../includes/helper.sv
