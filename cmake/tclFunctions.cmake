@@ -101,21 +101,31 @@ function (add_sv_target name)
 endfunction()
 
 function (add_vivado_project_target name)
-  cmake_parse_arguments(ARG "" "TOP_MODULE"
-                          "DEPENDENCE;INCLUDES" ${ARGN} )
+  cmake_parse_arguments(ARG "" "TOP_MODULE;HLS_MODULE;HLS_FILE"
+                          "DEPENDENCE;INCLUDES;SIM_FILES" ${ARGN} )
 
   if(NOT ARG_TOP_MODULE)  
-    message(FATAL_ERROR "Must specify TOP_MODULE ${ARG_TOP_MODULE}.")
+    message(FATAL_ERROR "Must specify TOP_MODULE.")
   endif()
 
   if(NOT ARG_DEPENDENCE)  
     message(FATAL_ERROR "Could not find any dependence.")
   endif()
 
+  if(NOT ARG_HLS_MODULE)  
+    message(FATAL_ERROR "Must specify HLS_MODULE.")
+  endif()
+
+  if(NOT ARG_HLS_FILE)  
+    message(FATAL_ERROR "Must specify HLS_FILE.")
+  endif()
+
   get_property(constraint_file GLOBAL PROPERTY constraint_file)
   get_property(part_name GLOBAL PROPERTY part_name)
   set (vivado_dir ${CMAKE_CURRENT_BINARY_DIR}/${name})
+  set (hls_dir ${CMAKE_CURRENT_BINARY_DIR}/hls_${name})
   set (vivado_xpr ${vivado_dir}/${ARG_TOP_MODULE}.xpr)
+  set (gen_hls_design_tcl ${CMAKE_SOURCE_DIR}/benchmarks/common/tcl/gen_hls_design.tcl)
   set (gen_hir_design_tcl ${CMAKE_SOURCE_DIR}/benchmarks/common/tcl/gen_hir_design.tcl)
 
   set(SRC_FILES "")
@@ -131,15 +141,30 @@ function (add_vivado_project_target name)
     list(APPEND SRC_FILES ${OUTPUT_FILES})
   endforeach()
 
+  set(SIM_FILES "")
+  foreach( sim_file ${ARG_SIM_FILES})
+    list(APPEND SIM_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${sim_file})
+  endforeach()
+
+  set (hlsLogFile ${CMAKE_CURRENT_BINARY_DIR}/${name}_hls.log)
+  set (HLS_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_HLS_FILE})
+  set (hls_zip ${hls_dir}/${ARG_HLS_MODULE}.zip)
+
+  add_custom_command(
+    OUTPUT ${hls_zip} ${hlsLogFile}
+    DEPENDS  ${VITIS_HLS} ${gen_hls_design_tcl} ${HLS_FILE}
+    COMMAND faketime 2021-01-01 ${VITIS_HLS} -f ${gen_hls_design_tcl} ${part_name} ${HLS_FILE} ${hls_dir} ${ARG_HLS_MODULE} > ${hlsLogFile}
+  )
+
   set (logfile ${CMAKE_CURRENT_BINARY_DIR}/${name}.log)
   add_custom_command(
-    OUTPUT ${vivado_xpr} ${logfile}
-    DEPENDS  ${VIVADO} ${gen_hir_design_tcl} ${constraint_file} ${SRC_FILES}
-    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${gen_hir_design_tcl} -tclargs ${part_name} ${constraint_file} ${vivado_dir} ${ARG_TOP_MODULE} ${SRC_FILES} > ${logfile}
+    OUTPUT ${vivado_xpr} ${logfile} 
+    DEPENDS  ${VIVADO} ${gen_hir_design_tcl} ${constraint_file} ${SRC_FILES} ${hls_zip}
+    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${gen_hir_design_tcl} -tclargs ${part_name} ${constraint_file} ${vivado_dir} ${ARG_TOP_MODULE} ${hls_dir} ${ARG_HLS_MODULE} ${SRC_FILES} -sim ${SIM_FILES}> ${logfile}
   )
 
   add_custom_target(
     ${name}
-    DEPENDS ${vivado_xpr} ${logfile}
+    DEPENDS ${vivado_xpr} 
   )
 endfunction()

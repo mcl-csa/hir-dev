@@ -10,6 +10,19 @@ add_vivado_project_target(gesummv_prj
     TOP_MODULE
     gesummv_hir
 
+    HLS_MODULE 
+    gesummv_hls
+
+    HLS_FILE
+    src/hls/gesummv.cpp
+
+    SIM_FILES
+    ../../includes/tb_helpers.sv
+    testbench/tb_gesummv.sv
+    testbench/A_vector.mem
+    testbench/B_vector.mem
+    testbench/X_vector.mem
+
     DEPENDENCE
     gesummv
 

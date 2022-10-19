@@ -41,6 +41,6 @@ attributes {hwAccel,argNames=["alpha","beta","tmp","A","B","X","Y"]} {
     %6 = arith.muli %arg1, %4  {result_delays=[1], hir_function=@mul_i32} : i32
     %7 = arith.addi %5, %6  {result_delays=[0], hir_function=@add_i32} : i32
     affine.store %7, %arg6[%arg7] : memref<8xi32>
-  }{II=20}
+  }{II=18}
   return
 }

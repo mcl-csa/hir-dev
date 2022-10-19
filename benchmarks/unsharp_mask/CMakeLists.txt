@@ -10,6 +10,12 @@ add_vivado_project_target(unsharp_mask_prj
     TOP_MODULE
     unsharp_mask_hir
 
+    HLS_MODULE
+    unsharp_mask_hls
+
+    HLS_FILE
+    src/hls/unsharp_mask.cpp
+
     DEPENDENCE
     ADD_F32
     SUB_F32

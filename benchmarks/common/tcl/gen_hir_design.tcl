@@ -4,23 +4,40 @@ set partName [lindex $argv 0]
 set constraints_xdc [lindex $argv 1]
 set output_dir [lindex $argv 2]
 set top_module_name [lindex $argv 3]
+set hls_ip_dir [lindex $argv 4]
+set hls_ip [lindex $argv 5]
+puts "$argv"
 
-set idx 4
+set idx 6
 set sv_files [list ]
+set sim_files [list ]
 set xci_files {}
+set mem_files [list ]
+
 while { $idx < $argc } {
     set arg [lindex $argv $idx]
     set ext [file extension $arg]
     if {$ext == ".sv"} {
         lappend sv_files $arg
-    } else {
-        if {$ext != ".xci"} {
-            error "Expected .sv or .xci files. Got $ext"
-        }
+    } elseif {$ext == ".xci"} {
         lappend xci_files $arg
+    } elseif {$arg == "-sim"} {
+        break
     }
     incr idx
 }
+
+while { $idx < $argc } {
+    set arg [lindex $argv $idx]
+    set ext [file extension $arg]
+    if {$ext == ".sv"} {
+        lappend sim_files $arg
+    } elseif {$ext == ".mem"} {
+        lappend mem_files $arg
+    }
+    incr idx
+}
+
 set files [glob -nocomplain "$output_dir/*"]
 puts "Writing project outputs to $output_dir"
 if { [llength $files] != 0 } {
@@ -31,13 +48,10 @@ if { [llength $files] != 0 } {
 
 create_project -part $partName  $top_module_name $output_dir
 set_msg_config -severity {CRITICAL WARNING} -new_severity ERROR
-foreach {sv_path} $sv_files {
-    puts $sv_path
-    add_files -fileset sources_1 $sv_path
-}
-
+add_files -fileset sources_1 $sv_files
 add_files -fileset constrs_1  $constraints_xdc
 read_xdc $constraints_xdc -mode out_of_context
+read_mem $mem_files
 
 if {[llength $xci_files]} {
     foreach {xci_path} $xci_files {
@@ -53,7 +67,18 @@ if {[llength $xci_files]} {
 set obj [get_filesets sources_1]
 set_property -name "top" -value $top_module_name -objects $obj
 set_property -name "top_auto_set" -value "0" -objects $obj
+
+set_property  ip_repo_paths  ${hls_ip_dir} [current_project]
+update_ip_catalog
+create_ip -name ${hls_ip} -vendor xilinx.com -library hls -version 1.0 -module_name ${hls_ip}_0
+
 update_compile_order -fileset sources_1
+
+if {[llength $sim_files]} {
+    set_property SOURCE_SET sources_1 [get_filesets sim_1]
+    add_files -fileset sim_1 $sim_files
+    update_compile_order -fileset sim_1
+}
 
 #generate_target all [get_ips]
 #launch_runs synth_1 -jobs 1
