@@ -12,12 +12,16 @@ void matmul_hir(IN_TYPE Ai[MAX_SIZE][MAX_SIZE], IN_TYPE Bi[MAX_SIZE][MAX_SIZE],
 #pragma scop
   for (int i = 0; i < MAX_SIZE; i++) {
     for (int k = 0; k < MAX_SIZE; k++) {
+#pragma HLS unroll
+#pragma HLS PIPELINE II = 2
       A[i][k] = Ai[i][k];
     }
   }
 
   for (int k = 0; k < MAX_SIZE; k++) {
+#pragma HLS unroll
     for (int j = 0; j < MAX_SIZE; j++) {
+#pragma HLS UNROLL
       Breg[k][j] = Bi[k][j];
     }
   }
