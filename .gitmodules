@@ -1,3 +1,6 @@
 [submodule "circt"]
 	path = circt
 	url = git@github.com:mcl-csa/circt-dev.git
+[submodule "Polygeist"]
+	path = Polygeist
+	url = git@github.com:mcl-csa/Polygeist.git
