@@ -5,6 +5,6 @@ proc subtract_f32 {outputDir} {
         CONFIG.Add_Sub_Value {Subtract} \
         CONFIG.Flow_Control {NonBlocking} \
         CONFIG.Maximum_Latency {false} \
-        CONFIG.C_Latency {8} \
+        CONFIG.C_Latency {5} \
         CONFIG.Has_RESULT_TREADY {false}] [get_ips subtract_f32]
 }

@@ -16,6 +16,12 @@ add_vivado_project_target(unsharp_mask_prj
     HLS_FILE
     src/hls/unsharp_mask.cpp
 
+    SIM_FILES
+    ../../includes/tb_helpers.sv
+    testbench/tb_unsharp_mask.sv
+    testbench/lenna.mem
+    testbench/kernel.mem
+
     DEPENDENCE
     ADD_F32
     SUB_F32

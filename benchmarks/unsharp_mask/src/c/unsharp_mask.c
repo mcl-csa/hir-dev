@@ -3,16 +3,16 @@
 #define KERNEL_SIZE_ROUNDED 8
 #define DATATYPE float
 
-DATATYPE select(char cmp, DATATYPE a, DATATYPE b);
+DATATYPE select_f32(char cmp, DATATYPE a, DATATYPE b);
 DATATYPE add_f32(DATATYPE a, DATATYPE b);
 DATATYPE sub_f32(DATATYPE a, DATATYPE b);
 DATATYPE mul_f32(DATATYPE a, DATATYPE b);
 char ugt_f32(DATATYPE a, DATATYPE b);
 
-#pragma HLS extern_func variable = add_f32 latency = 7
-#pragma HLS extern_func variable = sub_f32 latency = 7
+#pragma HLS extern_func variable = add_f32 latency = 5
+#pragma HLS extern_func variable = sub_f32 latency = 5
 #pragma HLS extern_func variable = mul_f32 latency = 4
-#pragma HLS extern_func variable = ugt_f32 latency = 2
+#pragma HLS extern_func variable = ugt_f32 latency = 1
 
 void split(DATATYPE output0[IMG_SIZE][IMG_SIZE],
            DATATYPE output1[IMG_SIZE][IMG_SIZE],
@@ -34,17 +34,18 @@ void convX(DATATYPE output[IMG_SIZE][IMG_SIZE],
            DATATYPE img[IMG_SIZE][IMG_SIZE],
            DATATYPE kernel[KERNEL_SIZE_ROUNDED]) {
 
+  float acc = 0;
 #pragma scop
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
-#pragma HLS pipeline II = 1680
+#pragma HLS pipeline II = 870
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
-#pragma HLS pipeline II = 56
-      output[i][j] = 0;
+#pragma HLS pipeline II = 32
+      acc = 0;
       for (int kk = 0; kk < KERNEL_SIZE; kk++) {
-#pragma HLS pipeline II = 10
-        output[i][j] =
-            add_f32(output[i][j], mul_f32(kernel[kk], img[i][j + kk]));
+#pragma HLS pipeline II = 6
+        acc = add_f32(acc, mul_f32(kernel[kk], img[i][j + kk]));
       }
+      output[i][j] = acc;
     }
   }
 #pragma endscop
@@ -53,17 +54,18 @@ void convX(DATATYPE output[IMG_SIZE][IMG_SIZE],
 void convY(DATATYPE output[IMG_SIZE][IMG_SIZE],
            DATATYPE img[IMG_SIZE][IMG_SIZE],
            DATATYPE kernel[KERNEL_SIZE_ROUNDED]) {
+  float acc = 0;
 #pragma scop
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
-#pragma HLS pipeline II = 1680
+#pragma HLS pipeline II = 870
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
-#pragma HLS pipeline II = 56
-      output[i][j] = 0;
+#pragma HLS pipeline II = 32
+      acc = 0;
       for (int kk = 0; kk < KERNEL_SIZE; kk++) {
-#pragma HLS pipeline II = 10
-        output[i][j] =
-            add_f32(output[i][j], mul_f32(kernel[kk], img[i + kk][j]));
+#pragma HLS pipeline II = 6
+        acc = add_f32(acc, mul_f32(kernel[kk], img[i + kk][j]));
       }
+      output[i][j] = acc;
     }
   }
 #pragma endscop
@@ -93,19 +95,19 @@ void mask(DATATYPE output[IMG_SIZE][IMG_SIZE], DATATYPE img[IMG_SIZE][IMG_SIZE],
     for (int j = 0; j < IMG_SIZE; j++) {
 #pragma HLS pipeline II = 1
       DATATYPE diff = sub_f32(img[i][j], blury[i][j]);
-      int cmp1 = ugt_f32(diff, 0);
-      DATATYPE abs = select(cmp1, diff, -diff);
-      int cmp2 = ugt_f32(threshold, abs);
-      output[i][j] = select(cmp2, img[i][j], sharp[i][j]);
+      char cmp1 = ugt_f32(diff, 0);
+      DATATYPE abs = select_f32(cmp1, diff, -diff);
+      char cmp2 = ugt_f32(threshold, abs);
+      output[i][j] = select_f32(cmp2, img[i][j], sharp[i][j]);
     }
   }
 #pragma endscop
 }
 
-void unsharpMask(DATATYPE img[IMG_SIZE][IMG_SIZE],
-                 DATATYPE maskImg[IMG_SIZE][IMG_SIZE],
-                 DATATYPE kernelX[KERNEL_SIZE_ROUNDED],
-                 DATATYPE kernelY[KERNEL_SIZE_ROUNDED]) {
+void unsharp_mask_hir(DATATYPE img[IMG_SIZE][IMG_SIZE],
+                      DATATYPE mask_img[IMG_SIZE][IMG_SIZE],
+                      DATATYPE kernelX[KERNEL_SIZE_ROUNDED],
+                      DATATYPE kernelY[KERNEL_SIZE_ROUNDED]) {
 
   DATATYPE blurxData[IMG_SIZE][IMG_SIZE];
   DATATYPE bluryData[IMG_SIZE][IMG_SIZE];
@@ -117,7 +119,7 @@ void unsharpMask(DATATYPE img[IMG_SIZE][IMG_SIZE],
   DATATYPE img2[IMG_SIZE][IMG_SIZE];
   DATATYPE sharpImgData[IMG_SIZE][IMG_SIZE];
 #pragma HLS interface port = img storage_type = ram_1p rd_latency = 1
-#pragma HLS interface port = maskImg storage_type = ram_1p wr_latency = 1
+#pragma HLS interface port = mask_img storage_type = ram_1p wr_latency = 1
 #pragma HLS interface port = kernelX storage_type = ram_1p rd_latency = 1
 #pragma HLS interface port = kernelY storage_type = ram_1p rd_latency = 1
 
@@ -146,5 +148,5 @@ void unsharpMask(DATATYPE img[IMG_SIZE][IMG_SIZE],
   convY(bluryData, blurxData, kernelY);
   split(bluryData0, bluryData1, bluryData);
   sharpen(sharpImgData, img1, bluryData0, 3);
-  mask(maskImg, img2, bluryData1, sharpImgData, 0.001);
+  mask(mask_img, img2, bluryData1, sharpImgData, 0.001);
 }

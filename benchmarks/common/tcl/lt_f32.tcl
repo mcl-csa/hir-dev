@@ -5,7 +5,7 @@ proc lt_f32 {outputDir} {
         CONFIG.C_Compare_Operation {Greater_Than} \
         CONFIG.Flow_Control {NonBlocking} \
         CONFIG.Maximum_Latency {false} \
-        CONFIG.C_Latency {1} \
+        CONFIG.C_Latency {2} \
         CONFIG.A_Precision_Type {Single} \
         CONFIG.C_A_Exponent_Width {8} \
         CONFIG.C_A_Fraction_Width {24} \

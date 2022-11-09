@@ -271,12 +271,11 @@
   module ugt_f32(
     input wire[31:0] a ,
     input  wire[31:0] b , 
-    input t  , 
+    input t, 
     input clk, 
     input rst, 
-    output wire out 
+    output wire[7:0] out 
   );
-    wire[7:0] outp;
     gt_f32 inst (
       .aclk(clk),                                  // input wire aclk
       .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
@@ -284,9 +283,8 @@
       .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
       .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
       .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
-      .m_axis_result_tdata(outp)    // output wire [31 : 0] m_axis_result_tdata
+      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
     );
-  assign out = outp[0];
   endmodule
 
   module neg_f32(
@@ -301,7 +299,7 @@
   endmodule
 
   module select_f32  (	// unsharp_mask_hir.mlir:237:15
-    input wire[31:0] cmp, 
+    input wire[7:0] cmp, 
     input wire[31:0] a,   
     input wire[31:0] b,   
     input wire t,   
@@ -312,6 +310,7 @@
     wire v = cmp[0];
     assign out = v?a:b;
   endmodule
+  
   module extsi_i1_i32  (	// unsharp_mask_hir.mlir:231:15
     input wire a,   
     input wire t,   

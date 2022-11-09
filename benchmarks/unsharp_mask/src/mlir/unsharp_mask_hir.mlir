@@ -1,128 +1,105 @@
-#bram_r = {"rd_latency"=1}
-#reg_r = {"rd_latency"=0}
-#bram_w = {"wr_latency"=1}
-#reg_w = {"wr_latency"=1}
-
-hir.func.extern @mul_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 4) {argNames=["a","b","t"], resultNames=["out"]}
-hir.func.extern @add_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 7){argNames=["a","b","t"], resultNames=["out"]}
-
-hir.func.extern @sub_f32 at %t(%a:i32, %b:i32) ->(%out:i32 delay 7){argNames=["a","b","t"], resultNames=["out"]}
-
-hir.func.extern @ugt_f32 at %t(%a:i32, %b:i32) ->(%out:i1 delay 2){argNames=["a","b","t"], resultNames=["out"]}
-
-hir.func.extern @ult_f32 at %t(%a:i32, %b:i32) ->(%out:i1 delay 2){argNames=["a","b","t"], resultNames=["out"]}
-
-hir.func.extern @neg_f32 at %t(%a:i32) ->(%out:i32){argNames=["a","t"], resultNames=["out"]}
-
-hir.func.extern @select_f32 at %t(%cmp:i32,%a:i32,%b:i32) ->(%out:i32){argNames=["cmp","a","b","t"], resultNames=["out"]}
-
-hir.func.extern @extsi_i1_i32 at %t(%a:i1) ->(%out:i32){argNames=["a","t"], resultNames=["out"]}
-
-
-
-  func.func @unsharp_mask_hir(
-    %arg0: memref<32x32xf32> {hir.memref.ports = [#bram_r]},
-    %arg1: memref<32x32xf32> {hir.memref.ports = [#bram_w]},
-    %arg2: memref<8xf32>     {hir.memref.ports = [#bram_r]}, 
-    %arg3: memref<8xf32>     {hir.memref.ports = [#bram_r]}
-  ) attributes {hwAccel,argNames=["img","mask","kernelX","kernelY"]} {
-
-    %c0 = arith.constant 0:index
-    %cst = arith.constant 0.000000e+00 : f32
-    %cst_0 = arith.constant 4.000000e+00 : f32
+module attributes {hir.hls} {
+  func.func private @add_f32(f32 {hir.delay = 0 : i64}, f32 {hir.delay = 0 : i64}) -> (f32 {hir.delay = 5 : i64}) attributes {argNames = ["a", "b"], hwAccel, llvm.linkage = #llvm.linkage<external>, resultNames = ["out"]}
+  func.func private @mul_f32(f32 {hir.delay = 0 : i64}, f32 {hir.delay = 0 : i64}) -> (f32 {hir.delay = 4 : i64}) attributes {argNames = ["a", "b"], hwAccel, llvm.linkage = #llvm.linkage<external>, resultNames = ["out"]}
+  func.func private @sub_f32(f32 {hir.delay = 0 : i64}, f32 {hir.delay = 0 : i64}) -> (f32 {hir.delay = 5 : i64}) attributes {argNames = ["a", "b"], hwAccel, llvm.linkage = #llvm.linkage<external>, resultNames = ["out"]}
+  func.func private @ugt_f32(f32 {hir.delay = 0 : i64}, f32 {hir.delay = 0 : i64}) -> (i8 {hir.delay = 1 : i64}) attributes {argNames = ["a", "b"], hwAccel, llvm.linkage = #llvm.linkage<external>, resultNames = ["out"]}
+  func.func private @select_f32(i8 {hir.delay = 0 : i64}, f32 {hir.delay = 0 : i64}, f32 {hir.delay = 0 : i64}) -> (f32 {hir.delay = 0 : i64}) attributes {argNames = ["cmp", "a", "b"], hwAccel, llvm.linkage = #llvm.linkage<external>, resultNames = ["out"]}
+  func.func private @neg_f32(f32 {hir.delay = 0 : i64}) -> (f32 {hir.delay = 0 : i64}) attributes {argNames = ["a"], hwAccel, resultNames = ["out"]}
+  func.func @unsharp_mask_hir(%arg0: memref<32x32xf32> {hir.memref.ports = [{rd_latency = 1 : i64}]}, %arg1: memref<32x32xf32> {hir.memref.ports = [{wr_latency = 1 : i64}]}, %arg2: memref<8xf32> {hir.memref.ports = [{rd_latency = 1 : i64}]}, %arg3: memref<8xf32> {hir.memref.ports = [{rd_latency = 1 : i64}]}) attributes {argNames = ["img", "mask_img", "kernelX", "kernelY"], hwAccel, llvm.linkage = #llvm.linkage<external>, resultNames = []} {
+    %cst = arith.constant 4.000000e+00 : f32
+    %cst_0 = arith.constant 0.000000e+00 : f32
     %cst_1 = arith.constant 3.000000e+00 : f32
     %cst_2 = arith.constant 1.000000e-03 : f32
-    %0 = memref.alloca(){names=["bram0"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %1 = memref.alloca(){names=["bram1"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %2 = memref.alloca(){names=["bram2"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %3 = memref.alloca(){names=["bram3"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %4 = memref.alloca(){names=["bram4"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %5 = memref.alloca(){names=["bram5"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %6 = memref.alloca(){names=["bram6"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %7 = memref.alloca(){names=["bram7"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
-    %8 = memref.alloca(){names=["bram8"],mem_kind="bram",hir.memref.ports = [#bram_r,#bram_w]}: memref<32x32xf32>
+    %0 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %1 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %2 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %3 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %4 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %5 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %6 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %7 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
+    %8 = memref.alloca() {hir.memref.ports = [{rd_latency = 1 : i64}, {wr_latency = 1 : i64}], mem_kind = "bram"} : memref<32x32xf32>
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
-        %9 = affine.load %arg0[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        affine.store %9, %4[%arg4, %arg5] : memref<32x32xf32>
-        affine.store %9, %3[%arg4, %arg5] : memref<32x32xf32>
-      }{II=1}
-    }{II=36}
+        %11 = affine.load %arg0[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        affine.store %11, %4[%arg4, %arg5] : memref<32x32xf32>
+        affine.store %11, %3[%arg4, %arg5] : memref<32x32xf32>
+      } {II = 1 : i64}
+    } {II = 36 : i64}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
-        %9 = affine.load %4[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        affine.store %9, %1[%arg4, %arg5] : memref<32x32xf32>
-        affine.store %9, %2[%arg4, %arg5] : memref<32x32xf32>
-      }{II=1}
-    }{II=36}
+        %11 = affine.load %4[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        affine.store %11, %1[%arg4, %arg5] : memref<32x32xf32>
+        affine.store %11, %2[%arg4, %arg5] : memref<32x32xf32>
+      } {II = 1 : i64}
+    } {II = 36 : i64}
+    %9 = memref.alloca() {hir.memref.ports = [{rd_latency = 0 : i64}, {wr_latency = 1 : i64}], mem_kind = "reg"} : memref<f32>
+    affine.store %cst_0, %9[] : memref<f32>
     affine.for %arg4 = 0 to 27 {
       affine.for %arg5 = 0 to 27 {
-        %reg = memref.alloca(){names=["reg_acc_convY"],mem_kind="reg",hir.memref.ports = [#reg_r,#reg_w]}: memref<1xf32>
-        affine.store %cst, %reg[%c0] : memref<1xf32>
+        affine.store %cst_0, %9[] : memref<f32>
         affine.for %arg6 = 0 to 5 {
-          %9 = affine.load %arg2[%arg6] {result_delays=[1]} : memref<8xf32>
-          %10 = affine.load %3[%arg4, %arg5 + %arg6] {result_delays=[1]} : memref<32x32xf32>
-          %11 = arith.mulf %9, %10  {result_delays=[4], hir_function=@mul_f32} : f32
-          %12 = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
-          %13 = arith.addf %12, %11  {result_delays=[7], hir_function=@add_f32} : f32
-          affine.store %13, %reg[%c0] : memref<1xf32>
-        }{II=8}
-        %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
-        affine.store %acc, %8[%arg4, %arg5] : memref<32x32xf32>
-      }{II=56}
-    }{II=1680}
-
+          %12 = affine.load %9[] {result_delays = [0]} : memref<f32>
+          %13 = affine.load %arg2[%arg6] {result_delays = [1]} : memref<8xf32>
+          %14 = affine.load %3[%arg4, %arg5 + %arg6] {result_delays = [1]} : memref<32x32xf32>
+          %15 = func.call @mul_f32(%13, %14) {result_delays = [4]} : (f32, f32) -> f32
+          %16 = func.call @add_f32(%12, %15) {result_delays = [5]} : (f32, f32) -> f32
+          affine.store %16, %9[] : memref<f32>
+        } {II = 6 : i64}
+        %11 = affine.load %9[] {result_delays = [0]} : memref<f32>
+        affine.store %11, %8[%arg4, %arg5] : memref<32x32xf32>
+      } {II = 32 : i64}
+    } {II = 870 : i64}
+    %10 = memref.alloca() {hir.memref.ports = [{rd_latency = 0 : i64}, {wr_latency = 1 : i64}], mem_kind = "reg"} : memref<f32>
+    affine.store %cst_0, %10[] : memref<f32>
     affine.for %arg4 = 0 to 27 {
       affine.for %arg5 = 0 to 27 {
-        %reg = memref.alloca(){names=["reg_acc_convY"],mem_kind="reg",hir.memref.ports = [#reg_r,#reg_w]}: memref<1xf32>
-        affine.store %cst, %reg[%c0] : memref<1xf32>
+        affine.store %cst_0, %10[] : memref<f32>
         affine.for %arg6 = 0 to 5 {
-          %9 = affine.load %arg3[%arg6] {result_delays=[1]} : memref<8xf32>
-          %10 = affine.load %8[%arg4 + %arg6, %arg5] {result_delays=[1]} : memref<32x32xf32>
-          %11 = arith.mulf %9, %10  {result_delays=[4], hir_function=@mul_f32} : f32
-          %12 = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
-          %13 = arith.addf %12, %11  {result_delays=[7], hir_function=@add_f32} : f32
-          affine.store %13, %reg[%c0] : memref<1xf32>
-        }{II=8}
-        %acc = affine.load %reg[%c0] {result_delays=[0]} : memref<1xf32>
-        affine.store %acc, %7[%arg4, %arg5] : memref<32x32xf32>
-      }{II=56}
-    }{II=1680}
+          %12 = affine.load %10[] {result_delays = [0]} : memref<f32>
+          %13 = affine.load %arg3[%arg6] {result_delays = [1]} : memref<8xf32>
+          %14 = affine.load %8[%arg4 + %arg6, %arg5] {result_delays = [1]} : memref<32x32xf32>
+          %15 = func.call @mul_f32(%13, %14) {result_delays = [4]} : (f32, f32) -> f32
+          %16 = func.call @add_f32(%12, %15) {result_delays = [5]} : (f32, f32) -> f32
+          affine.store %16, %10[] : memref<f32>
+        } {II = 6 : i64}
+        %11 = affine.load %10[] {result_delays = [0]} : memref<f32>
+        affine.store %11, %7[%arg4, %arg5] : memref<32x32xf32>
+      } {II = 32 : i64}
+    } {II = 870 : i64}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
-        %9 = affine.load %7[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        affine.store %9, %6[%arg4, %arg5] : memref<32x32xf32>
-        affine.store %9, %5[%arg4, %arg5] : memref<32x32xf32>
-      }{II=1}
-    }{II=36}
+        %11 = affine.load %7[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        affine.store %11, %6[%arg4, %arg5] : memref<32x32xf32>
+        affine.store %11, %5[%arg4, %arg5] : memref<32x32xf32>
+      } {II = 1 : i64}
+    } {II = 36 : i64}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
-        %9 = affine.load %2[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %10 = arith.mulf %cst_0, %9  {result_delays=[4], hir_function=@mul_f32} : f32
-        %11 = affine.load %6[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %12 = arith.mulf %cst_1, %11  {result_delays=[4], hir_function=@mul_f32} : f32
-        %13 = arith.subf %10, %12  {result_delays=[7],hir_function=@sub_f32} : f32
-        affine.store %13, %0[%arg4, %arg5] : memref<32x32xf32>
-      }{II=1}
-    }{II=36}
+        %11 = affine.load %2[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        %12 = func.call @mul_f32(%cst, %11) {result_delays = [4]} : (f32, f32) -> f32
+        %13 = affine.load %6[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        %14 = func.call @mul_f32(%cst_1, %13) {result_delays = [4]} : (f32, f32) -> f32
+        %15 = func.call @sub_f32(%12, %14) {result_delays = [5]} : (f32, f32) -> f32
+        affine.store %15, %0[%arg4, %arg5] : memref<32x32xf32>
+      } {II = 1 : i64}
+    } {II = 36 : i64}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
-        %9 = affine.load %1[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %10 = affine.load %5[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %11 = arith.subf %9, %10  {result_delays=[7],hir_function=@sub_f32} : f32
-        %12 = arith.cmpf ugt, %11, %cst  {result_delays=[2],hir_function=@ugt_f32} : f32
-        %13 = arith.extsi %12 {result_delays=[0],hir_function=@extsi_i1_i32}: i1 to i32
-        %14 = arith.negf %11  {result_delays=[0],hir_function=@neg_f32} : f32
-        %15 = func.call @select(%13, %11, %14) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
-        %16 = arith.cmpf ult, %15, %cst_2  {result_delays=[2],hir_function=@ult_f32} : f32
-        %17 = arith.extsi %16 {result_delays=[0],hir_function=@extsi_i1_i32}: i1 to i32
-        %18 = affine.load %1[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %19 = affine.load %0[%arg4, %arg5] {result_delays=[1]} : memref<32x32xf32>
-        %20 = func.call @select(%17, %18, %19) {result_delays=[0],hir_function=@select_f32}: (i32, f32, f32) -> f32
+        %11 = affine.load %1[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        %12 = affine.load %5[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        %13 = func.call @sub_f32(%11, %12) {result_delays = [5]} : (f32, f32) -> f32
+        %14 = func.call @ugt_f32(%13, %cst_0) {result_delays = [1]} : (f32, f32) -> i8
+        %15 = func.call @neg_f32(%13) {result_delays = [0]} : (f32) -> f32
+        %16 = func.call @select_f32(%14, %13, %15) {result_delays = [0]} : (i8, f32, f32) -> f32
+        %17 = func.call @ugt_f32(%cst_2, %16) {result_delays = [1]} : (f32, f32) -> i8
+        %18 = affine.load %1[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        %19 = affine.load %0[%arg4, %arg5] {result_delays = [1]} : memref<32x32xf32>
+        %20 = func.call @select_f32(%17, %18, %19) {result_delays = [0]} : (i8, f32, f32) -> f32
         affine.store %20, %arg1[%arg4, %arg5] : memref<32x32xf32>
-      }{II=1}
-    }{II=36}
+      } {II = 1 : i64}
+    } {II = 36 : i64}
     return
   }
+}
 
-  func.func private @select(i32, f32, f32) -> f32 attributes {llvm.linkage = #llvm.linkage<external>}
