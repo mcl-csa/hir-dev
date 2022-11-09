@@ -1,3 +1,6 @@
 add_subdirectory(common)
 add_subdirectory(gesummv)
 add_subdirectory(unsharp_mask)
+add_subdirectory(jacobi_2d)
+add_subdirectory(jacobi_2d_sdp)
+add_subdirectory(2mm)
