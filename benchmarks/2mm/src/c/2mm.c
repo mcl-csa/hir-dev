@@ -1,7 +1,7 @@
-#define _PB_NI 32
-#define _PB_NJ 32
-#define _PB_NL 32
-#define _PB_NK 32
+#define _PB_NI 8
+#define _PB_NJ 8
+#define _PB_NL 8
+#define _PB_NK 8
 #define DATA_TYPE float
 
 DATA_TYPE add_f32(DATA_TYPE a, DATA_TYPE b);
@@ -28,33 +28,27 @@ void kernel_2mm_hir(DATA_TYPE alpha, DATA_TYPE beta,
   /* D := alpha*A*B*C + beta*D */
   DATA_TYPE acc;
   for (i = 0; i < _PB_NI; i++)
-#pragma HLS pipeline II = 32
-    for (j = 0; j < _PB_NJ; j++)
-#pragma HLS pipeline II = 1
-      tmp[i][j] = 0;
+#pragma HLS pipeline II = 6500
+    for (j = 0; j < _PB_NJ; j++) {
+#pragma HLS pipeline II = 200
+      acc = 0;
+      for (k = 0; k < _PB_NK; ++k)
+#pragma HLS pipeline II = 6
+        acc = add_f32(acc, mul_f32(alpha, mul_f32(A[i][k], B[k][j])));
+      tmp[i][j] = acc;
+    }
 
+  float acc2;
   for (i = 0; i < _PB_NI; i++)
-#pragma HLS pipeline II = 1024
-    for (k = 0; k < _PB_NK; ++k)
-#pragma HLS pipeline II = 32
-      for (j = 0; j < _PB_NJ; j++)
-#pragma HLS pipeline II = 1
-        tmp[i][j] =
-            add_f32(tmp[i][j], mul_f32(alpha, mul_f32(A[i][k], B[k][j])));
-
-  for (i = 0; i < _PB_NI; i++)
-#pragma HLS pipeline II = 128
-    for (j = 0; j < _PB_NL; j++)
-#pragma HLS pipeline II = 1
-      D[i][j] = mul_f32(D[i][j], beta);
-
-  for (i = 0; i < _PB_NI; i++)
-#pragma HLS pipeline II = 1024
-    for (k = 0; k < _PB_NJ; ++k)
-#pragma HLS pipeline II = 32
-      for (j = 0; j < _PB_NL; j++)
-#pragma HLS pipeline II = 1
-        D[i][j] = add_f32(D[i][j], mul_f32(tmp[i][k], C[k][j]));
-
+#pragma HLS pipeline II = 6500
+    for (j = 0; j < _PB_NL; j++) {
+#pragma HLS pipeline II = 200
+      acc2 = mul_f32(D[i][j], beta);
+      for (k = 0; k < _PB_NJ; ++k) {
+#pragma HLS pipeline II = 6
+        acc2 = add_f32(acc2, mul_f32(tmp[i][k], C[k][j]));
+      }
+      D[i][j] = acc2;
+    }
 #pragma endscop
 }

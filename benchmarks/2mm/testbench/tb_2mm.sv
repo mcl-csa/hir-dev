@@ -11,12 +11,17 @@ module tb_2mm_hir();
   wire rst;
 
   reg[31:0]  T_mem[1023:0];
-  wire [9:0] T_rd_addr;
-  wire       T_rd_en;
-  wire[31:0] T_rd_data;
-  wire[9:0]  T_wr_addr;
-  wire       T_wr_en;
-  wire[31:0] T_wr_data;
+  wire [9:0] T_addr0;
+  wire       T_rd_en0;
+  wire[31:0] T_rd_data0;
+  wire       T_wr_en0;
+  wire[31:0] T_wr_data0;
+
+  wire [9:0] T_addr1;
+  wire       T_rd_en1;
+  wire[31:0] T_rd_data1;
+  wire       T_wr_en1;
+  wire[31:0] T_wr_data1;
 
   reg[31:0] A_mem[1023:0];
   wire [9:0] A_rd_addr;
@@ -54,8 +59,11 @@ module tb_2mm_hir();
   
   clk_generator gen_clk_inst(clk,rst,tstart);
 
-  memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_T(T_mem,T_rd_en, T_rd_addr,/*valid*/ ,T_rd_data,clk);
-  memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_T(T_mem,T_wr_en, T_wr_addr,T_wr_data,clk);
+  memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_T0(T_mem,T_rd_en0, T_addr0,/*valid*/ ,T_rd_data0,clk);
+  //memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_T0(T_mem,T_wr_en0, T_addr0,T_wr_data0,clk);
+  //memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_T1(T_mem,T_rd_en1, T_addr1,/*valid*/ ,T_rd_data1,clk);
+  memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_T1(T_mem,T_wr_en1, T_addr1,T_wr_data1,clk);
+
   memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_A(A_mem, A_rd_en, A_rd_addr, /*valid*/ , A_rd_data, clk);
   memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_B(B_mem,B_rd_en, B_rd_addr,/*valid*/ ,B_rd_data,clk);
   memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_C(C_mem,C_rd_en, C_rd_addr,/*valid*/ ,C_rd_data,clk);
@@ -65,15 +73,20 @@ module tb_2mm_hir();
   kernel_2mm_hir hir_inst(
     .alpha(alpha),
     .beta(beta),
-    .tmp_p0_addr_data ( T_rd_addr       ) ,
-    .tmp_p0_addr_en   ( /*unconnected*/ ) ,
-    .tmp_p0_rd_data   ( T_rd_data       ) ,
-    .tmp_p0_rd_en     ( T_rd_en         ) ,
 
-    .tmp_p1_addr_data ( T_wr_addr       ) ,
+    .tmp_p0_addr_data ( T_addr0       ) ,
+    .tmp_p0_addr_en   ( /*unconnected*/ ) ,
+    .tmp_p0_rd_data   ( T_rd_data0       ) ,
+    .tmp_p0_rd_en     ( T_rd_en0         ) ,
+    //.tmp_p0_wr_data   ( T_wr_data0       ) ,
+    //.tmp_p0_wr_en     ( T_wr_en0         ) ,
+
+    .tmp_p1_addr_data ( T_addr1       ) ,
     .tmp_p1_addr_en   ( /*unconnected*/ ) ,
-    .tmp_p1_wr_data   ( T_wr_data       ) ,
-    .tmp_p1_wr_en     ( T_wr_en         ) ,
+    //.tmp_p1_rd_data   ( T_rd_data1       ) ,
+    //.tmp_p1_rd_en     ( T_rd_en1         ) ,
+    .tmp_p1_wr_data   ( T_wr_data1       ) ,
+    .tmp_p1_wr_en     ( T_wr_en1         ) ,
 
     .A_p0_addr_data ( A_rd_addr       ) ,
     .A_p0_addr_en   ( /*unconnected*/ ) ,
@@ -177,8 +190,8 @@ module tb_2mm_hls();
   clk_generator gen_clk_inst(clk,rst,tstart);
 
   memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_T0(T_mem,T_rd_en0, T_addr0,/*valid*/ ,T_rd_data0,clk);
-  memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_T0(T_mem,T_wr_en0, T_addr0,T_wr_data0,clk);
-  memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_T1(T_mem,T_rd_en1, T_addr1,/*valid*/ ,T_rd_data1,clk);
+  //memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_T0(T_mem,T_wr_en0, T_addr0,T_wr_data0,clk);
+  //memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_T1(T_mem,T_rd_en1, T_addr1,/*valid*/ ,T_rd_data1,clk);
   memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_T1(T_mem,T_wr_en1, T_addr1,T_wr_data1,clk);
 
   memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_A(A_mem, A_rd_en, A_rd_addr, /*valid*/ , A_rd_data, clk);
@@ -190,23 +203,20 @@ module tb_2mm_hls();
   memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_C1(C_mem,C_rd_en1, C_rd_addr1,/*valid*/ ,C_rd_data1,clk);
 
   memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_D0(D_mem,D_rd_en0, D_addr0,/*valid*/ ,D_rd_data0,clk);
-  memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_D0(D_mem,D_wr_en0, D_addr0,D_wr_data0,clk);
-  memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_D1(D_mem,D_rd_en1, D_addr1,/*valid*/ ,D_rd_data1,clk);
+  //memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_D0(D_mem,D_wr_en0, D_addr0,D_wr_data0,clk);
+  //memref_rd#(.WIDTH(32),.SIZE(1024)) memref_rd_D1(D_mem,D_rd_en1, D_addr1,/*valid*/ ,D_rd_data1,clk);
   memref_wr#(.WIDTH(32),.SIZE(1024)) memref_wr_D1(D_mem,D_wr_en1, D_addr1,D_wr_data1,clk);
 
 kernel_2mm_hls_0 hls_inst (
   .alpha(alpha),                // input wire [31 : 0] alpha
   .beta(beta),                  // input wire [31 : 0] beta
   .tmp_ce0(T_rd_en0),            // output wire tmp_ce0
-  .tmp_we0(T_wr_en0),            // output wire tmp_we0
   .tmp_address0(T_addr0),  // output wire [9 : 0] tmp_address0
-  .tmp_d0(T_wr_data0),              // output wire [31 : 0] tmp_d0
   .tmp_q0(T_rd_data0),              // input wire [31 : 0] tmp_q0
-  .tmp_ce1(T_rd_en1),            // output wire tmp_ce1
-  .tmp_we1(T_wr_en1),            // output wire tmp_we1
+  .tmp_we1(T_wr_en1),            // output wire tmp_we0
+  .tmp_ce1(),            // output wire tmp_ce1
   .tmp_address1(T_addr1),  // output wire [9 : 0] tmp_address1
-  .tmp_d1(T_wr_data1),              // output wire [31 : 0] tmp_d1
-  .tmp_q1(T_rd_data1),              // input wire [31 : 0] tmp_q1
+  .tmp_d1(T_wr_data1),              // input wire [31 : 0] tmp_q0
   .A_ce0(A_rd_en),                // output wire A_ce0
   .A_address0(A_rd_addr),      // output wire [9 : 0] A_address0
   .A_q0(A_rd_data),                  // input wire [31 : 0] A_q0
@@ -223,15 +233,12 @@ kernel_2mm_hls_0 hls_inst (
   .C_address1(C_rd_addr1),      // output wire [9 : 0] C_address1
   .C_q1(C_rd_data1),                  // input wire [31 : 0] C_q1
   .D_ce0(D_rd_en0),                // output wire D_ce0
-  .D_we0(D_wr_en0),                // output wire D_we0
   .D_address0(D_addr0),      // output wire [9 : 0] D_address0
-  .D_d0(D_wr_data0),                  // output wire [31 : 0] D_d0
   .D_q0(D_rd_data0),                  // input wire [31 : 0] D_q0
-  .D_ce1(D_rd_en1),                // output wire D_ce1
-  .D_we1(D_wr_en1),                // output wire D_we1
-  .D_address1(D_addr1),      // output wire [9 : 0] D_address1
-  .D_d1(D_wr_data1),                  // output wire [31 : 0] D_d1
-  .D_q1(D_rd_data1),                  // input wire [31 : 0] D_q1
+  .D_ce1(),                // output wire D_ce0
+  .D_address1(D_addr1),      // output wire [9 : 0] D_address0
+  .D_we1(D_wr_en1),                // output wire D_we0
+  .D_d1(D_wr_data1),                  // input wire [31 : 0] D_q0
   .ap_clk(clk),              // input wire ap_clk
   .ap_rst(rst),              // input wire ap_rst
   .ap_start(tstart),          // input wire ap_start
