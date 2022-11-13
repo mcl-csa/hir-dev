@@ -2,8 +2,9 @@
 #define KERNEL_SIZE 5
 static float abs(float v) { return v > 0 ? v : -v; }
 
-void split(float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IMG_SIZE],
+ void split(float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IMG_SIZE],
            float input[IMG_SIZE][IMG_SIZE]) {
+
   for (int i = 0; i < IMG_SIZE; i++) {
     for (int j = 0; j < IMG_SIZE; j++) {
       output0[i][j] = input[i][j];
@@ -12,8 +13,9 @@ void split(float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IMG_SIZE],
   }
 }
 
-void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+ void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
            float kernel[KERNEL_SIZE]) {
+
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
 #pragma HLS PIPELINE off
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
@@ -27,8 +29,9 @@ void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
   }
 }
 
-void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+ void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
            float kernel[KERNEL_SIZE]) {
+
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
 #pragma HLS PIPELINE off
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
@@ -42,8 +45,9 @@ void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
   }
 }
 
-void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+ void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
              float blury[IMG_SIZE][IMG_SIZE], float weight) {
+
   for (int i = 0; i < IMG_SIZE; i++) {
     for (int j = 0; j < IMG_SIZE; j++) {
 #pragma HLS PIPELINE
@@ -52,9 +56,10 @@ void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
   }
 }
 
-void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+ void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
           float blury[IMG_SIZE][IMG_SIZE], float sharp[IMG_SIZE][IMG_SIZE],
           float threshold) {
+
   for (int i = 0; i < IMG_SIZE; i++) {
     for (int j = 0; j < IMG_SIZE; j++) {
 #pragma HLS PIPELINE
@@ -68,30 +73,32 @@ void unsharp_mask_hls(float img[IMG_SIZE][IMG_SIZE],
                       float mask_img[IMG_SIZE][IMG_SIZE],
                       float kernelDataX[KERNEL_SIZE],
                       float kernelDataY[KERNEL_SIZE]) {
-//#pragma HLS INTERFACE mode=ap_memory port=img storage_impl=bram
-// storage_type=ram_1p #pragma HLS INTERFACE mode=ap_memory port=mask_img
-// storage_type=ram_1p #pragma HLS INTERFACE mode=ap_memory port=kernelDataX
-// storage_type=ram_1p #pragma HLS INTERFACE mode=ap_memory port=kernelDataY
-// storage_type=ram_1p
+
+//#pragma HLS INLINE recursive
+#pragma HLS INTERFACE mode=ap_memory port=img storage_type=rom_1p
+#pragma HLS INTERFACE mode = ap_memory port = mask_img storage_type = ram_1p
+#pragma HLS INTERFACE mode=ap_memory port=kernelDataX storage_type=rom_1p
+#pragma HLS INTERFACE mode=ap_memory port=kernelDataY storage_type=rom_1p
+
+#pragma HLS DATAFLOW
 #pragma HLS INTERFACE mode = ap_ctrl_none
-  //#pragma HLS DATAFLOW
+
 
   float blurxData[IMG_SIZE][IMG_SIZE];
   float bluryData[IMG_SIZE][IMG_SIZE];
   float bluryData0[IMG_SIZE][IMG_SIZE];
   float bluryData1[IMG_SIZE][IMG_SIZE];
-  //#pragma HLS STREAM depth=3 type=pipo variable=bluryData1
+#pragma HLS STREAM depth = 4 type = pipo variable = bluryData1
+
   float imgtemp[IMG_SIZE][IMG_SIZE];
   float img0[IMG_SIZE][IMG_SIZE];
 
-  // Below pragma should not have worked because img0 is not read in same order
-  // as its writes, but vitis hls still implements img0 as a fifo (not
-  // pipo(ping-pong buffer)). #pragma HLS STREAM depth=4 variable=img0 #pragma
-  // HLS STREAM type=pipo variable=img0
+
   float img1[IMG_SIZE][IMG_SIZE];
-  //#pragma HLS STREAM depth=4 variable=img1
+#pragma HLS STREAM depth = 4 type = pipo variable = img1
   float img2[IMG_SIZE][IMG_SIZE];
-  //#pragma HLS STREAM depth=2048 variable=img2
+#pragma HLS STREAM depth = 5 type = pipo variable = img2
+
   float sharpImgData[IMG_SIZE][IMG_SIZE];
 
   split(imgtemp, img0, img);
