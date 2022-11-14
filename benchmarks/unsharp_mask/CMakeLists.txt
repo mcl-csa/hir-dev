@@ -14,7 +14,7 @@ add_vivado_project_target(unsharp_mask_prj
     unsharp_mask_hls
 
     HLS_FILE
-    src/hls/jacobi_2d.cpp
+    src/hls/unsharp_mask.cpp
 
     SIM_FILES
     ../../includes/tb_helpers.sv
