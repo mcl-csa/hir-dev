@@ -2,24 +2,23 @@
 #define KERNEL_SIZE 5
 static float abs(float v) { return v > 0 ? v : -v; }
 
- void split(float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IMG_SIZE],
+void split(float output0[IMG_SIZE][IMG_SIZE], float output1[IMG_SIZE][IMG_SIZE],
            float input[IMG_SIZE][IMG_SIZE]) {
 
   for (int i = 0; i < IMG_SIZE; i++) {
     for (int j = 0; j < IMG_SIZE; j++) {
+#pragma HLS PIPELINE
       output0[i][j] = input[i][j];
       output1[i][j] = input[i][j];
     }
   }
 }
 
- void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+void convX(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
            float kernel[KERNEL_SIZE]) {
 
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
-#pragma HLS PIPELINE off
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
-#pragma HLS PIPELINE off
       output[i][j] = 0;
       for (int kk = 0; kk < KERNEL_SIZE; kk++) {
 #pragma HLS PIPELINE
@@ -29,13 +28,11 @@ static float abs(float v) { return v > 0 ? v : -v; }
   }
 }
 
- void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+void convY(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
            float kernel[KERNEL_SIZE]) {
 
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
-#pragma HLS PIPELINE off
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
-#pragma HLS PIPELINE off
       output[i][j] = 0;
       for (int kk = 0; kk < KERNEL_SIZE; kk++) {
 #pragma HLS PIPELINE
@@ -45,7 +42,7 @@ static float abs(float v) { return v > 0 ? v : -v; }
   }
 }
 
- void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+void sharpen(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
              float blury[IMG_SIZE][IMG_SIZE], float weight) {
 
   for (int i = 0; i < IMG_SIZE; i++) {
@@ -56,7 +53,7 @@ static float abs(float v) { return v > 0 ? v : -v; }
   }
 }
 
- void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
+void mask(float output[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE],
           float blury[IMG_SIZE][IMG_SIZE], float sharp[IMG_SIZE][IMG_SIZE],
           float threshold) {
 
@@ -74,30 +71,41 @@ void unsharp_mask_hls(float img[IMG_SIZE][IMG_SIZE],
                       float kernelDataX[KERNEL_SIZE],
                       float kernelDataY[KERNEL_SIZE]) {
 
-//#pragma HLS INLINE recursive
-#pragma HLS INTERFACE mode=ap_memory port=img storage_type=rom_1p
+#pragma HLS INLINE recursive
+#pragma HLS INTERFACE mode = ap_memory port = img storage_type = ram_1p
 #pragma HLS INTERFACE mode = ap_memory port = mask_img storage_type = ram_1p
-#pragma HLS INTERFACE mode=ap_memory port=kernelDataX storage_type=rom_1p
-#pragma HLS INTERFACE mode=ap_memory port=kernelDataY storage_type=rom_1p
+#pragma HLS INTERFACE mode = ap_memory port = kernelDataX storage_type = ram_1p
+#pragma HLS INTERFACE mode = ap_memory port = kernelDataY storage_type = ram_1p
 
-#pragma HLS DATAFLOW
+//#pragma HLS DATAFLOW
 #pragma HLS INTERFACE mode = ap_ctrl_none
 
-
   float blurxData[IMG_SIZE][IMG_SIZE];
+#pragma HLS BIND_STORAGE variable = blurxData type = ram_2p impl =             \
+    bram latency = 1
   float bluryData[IMG_SIZE][IMG_SIZE];
+#pragma HLS BIND_STORAGE variable = bluryData type = ram_2p impl =             \
+    bram latency = 1
   float bluryData0[IMG_SIZE][IMG_SIZE];
+#pragma HLS BIND_STORAGE variable = bluryData0 type = ram_2p impl =            \
+    bram latency = 1
   float bluryData1[IMG_SIZE][IMG_SIZE];
-#pragma HLS STREAM depth = 4 type = pipo variable = bluryData1
+#pragma HLS BIND_STORAGE variable = bluryData1 type = ram_2p impl =            \
+    bram latency = 1
+  //#pragma HLS STREAM depth = 3 type = pipo variable = bluryData1
 
   float imgtemp[IMG_SIZE][IMG_SIZE];
+#pragma HLS BIND_STORAGE variable = imgtemp type = ram_2p impl =               \
+    bram latency = 1
   float img0[IMG_SIZE][IMG_SIZE];
-
+#pragma HLS BIND_STORAGE variable = img0 type = ram_2p impl = bram latency = 1
 
   float img1[IMG_SIZE][IMG_SIZE];
-#pragma HLS STREAM depth = 4 type = pipo variable = img1
+#pragma HLS BIND_STORAGE variable = img1 type = ram_2p impl = bram latency = 1
+  //#pragma HLS STREAM depth = 4 type = pipo variable = img1
   float img2[IMG_SIZE][IMG_SIZE];
-#pragma HLS STREAM depth = 5 type = pipo variable = img2
+#pragma HLS BIND_STORAGE variable = img2 type = ram_2p impl = bram latency = 1
+  //#pragma HLS STREAM depth = 5 type = pipo variable = img2
 
   float sharpImgData[IMG_SIZE][IMG_SIZE];
 

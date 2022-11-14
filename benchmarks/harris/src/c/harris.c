@@ -1,5 +1,5 @@
-#define R 16
-#define C 16
+#define R 32
+#define C 32
 
 float add_f32(float a, float b);
 float sub_f32(float a, float b);
@@ -12,7 +12,7 @@ float mul_f32(float a, float b);
 void split(float output1[R][C], float output2[R][C], float input[R][C]) {
 #pragma scop
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 16
+#pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       float v = input[r][c];
@@ -24,9 +24,9 @@ void split(float output1[R][C], float output2[R][C], float input[R][C]) {
 }
 void funcIx(float ix[R][C], float img[R][C]) {
 #pragma scop
-  for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 100
-    for (int c = 0; c < C; c++) {
+  for (int r = 1; r < R - 1; r++) {
+#pragma HLS pipeline II = 200
+    for (int c = 1; c < C - 1; c++) {
 #pragma HLS pipeline II = 6
       ix[r][c] = add_f32(add_f32(add_f32(mul_f32(img[r - 1][c - 1], (-1 / 12)),
                                          mul_f32(img[r + 1][c - 1], (1 / 12))),
@@ -41,9 +41,9 @@ void funcIx(float ix[R][C], float img[R][C]) {
 
 void funcIy(float iy[R][C], float img[R][C]) {
 #pragma scop
-  for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 100
-    for (int c = 0; c < C; c++) {
+  for (int r = 1; r < R - 1; r++) {
+#pragma HLS pipeline II = 200
+    for (int c = 1; c < C - 1; c++) {
 #pragma HLS pipeline II = 6
       iy[r][c] = add_f32(add_f32(add_f32(mul_f32(img[r - 1][c - 1], (-1 / 12)),
                                          mul_f32(img[r - 1][c + 1], (1 / 12))),
@@ -59,7 +59,7 @@ void funcIxx(float ixx[R][C], float ix[R][C]) {
 #pragma scop
   float v;
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 16
+#pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       v = ix[r][c];
@@ -73,7 +73,7 @@ void funcIyy(float iyy[R][C], float iy[R][C]) {
 #pragma scop
   float v;
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 16
+#pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       v = iy[r][c];
@@ -86,7 +86,7 @@ void funcIyy(float iyy[R][C], float iy[R][C]) {
 void funcIxy(float ixy[R][C], float ix[R][C], float iy[R][C]) {
 #pragma scop
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 16
+#pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       ixy[r][c] = mul_f32(ix[r][c], iy[r][c]);
@@ -97,9 +97,9 @@ void funcIxy(float ixy[R][C], float ix[R][C], float iy[R][C]) {
 
 void funcS(float sxx[R][C], float ixx[R][C]) {
 #pragma scop
-  for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 160
-    for (int c = 0; c < C; c++) {
+  for (int r = 1; r < R - 1; r++) {
+#pragma HLS pipeline II = 300
+    for (int c = 1; c < C - 1; c++) {
 #pragma HLS pipeline II = 9
       sxx[r][c] =
           add_f32(add_f32(add_f32(add_f32(ixx[r - 1][c - 1], ixx[r - 1][c]),
@@ -117,7 +117,7 @@ void funcDet(float det[R][C], float sxx[R][C], float syy[R][C],
 #pragma scop
   float v;
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 16
+#pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       v = sxy[r][c];
@@ -130,7 +130,7 @@ void funcDet(float det[R][C], float sxx[R][C], float syy[R][C],
 void funcTrace(float trace[R][C], float sxx[R][C], float syy[R][C]) {
 #pragma scop
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 16
+#pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       trace[r][c] = add_f32(sxx[r][c], syy[r][c]);
@@ -142,7 +142,7 @@ void funcHarris(float harris[R][C], float det[R][C], float trace[R][C]) {
 #pragma scop
   float v;
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 16
+#pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       v = trace[r][c];

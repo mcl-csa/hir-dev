@@ -97,11 +97,12 @@ void mask(DATATYPE output[IMG_SIZE][IMG_SIZE], DATATYPE img[IMG_SIZE][IMG_SIZE],
 #pragma HLS pipeline II = 36
     for (int j = 0; j < IMG_SIZE; j++) {
 #pragma HLS pipeline II = 1
-      DATATYPE diff = sub_f32(img[i][j], blury[i][j]);
+      float v = img[i][j];
+      DATATYPE diff = sub_f32(v, blury[i][j]);
       char cmp1 = ugt_f32(diff, 0);
       DATATYPE abs = select_f32(cmp1, diff, -diff);
       char cmp2 = ugt_f32(threshold, abs);
-      output[i][j] = select_f32(cmp2, img[i][j], sharp[i][j]);
+      output[i][j] = select_f32(cmp2, v, sharp[i][j]);
     }
   }
 #pragma endscop
