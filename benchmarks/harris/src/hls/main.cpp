@@ -34,6 +34,7 @@ int main() {
   for (int i = 0; i < R; i++) {
     for (int j = 0; j < C; j++) {
       img[i][j] = mem[loc];
+      harris[i][j] = 0;
       loc++;
     }
   }
@@ -42,10 +43,10 @@ int main() {
   loc = 0;
   for (int i = 0; i < R; i++) {
     for (int j = 0; j < C; j++) {
-      if (harris[i][j] > 0) {
+      if (harris[i][j] != 0) {
         printf("   %d: %f,\n", loc, harris[i][j]);
-        loc++;
       }
+      loc++;
     }
   }
 
