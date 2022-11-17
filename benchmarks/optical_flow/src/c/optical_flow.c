@@ -1,17 +1,18 @@
 #define R 32
 #define C 32
-
 float add_f32(float a, float b);
 float sub_f32(float a, float b);
 float mul_f32(float a, float b);
+float div_f32(float a, float b);
 #pragma HLS extern_func variable = add_f32 latency = 5
 #pragma HLS extern_func variable = sub_f32 latency = 5
 #pragma HLS extern_func variable = mul_f32 latency = 4
+#pragma HLS extern_func variable = div_f32 latency = 14
 
 void split(float output1[R][C], float output2[R][C], float input[R][C]) {
 #pragma scop
   for (int r = 0; r < R; r++) {
-#pragma HLS pipeline II = 32
+#pragma HLS pipeline II = 36
     for (int c = 0; c < C; c++) {
 #pragma HLS pipeline II = 1
       float v = input[r][c];
@@ -21,18 +22,19 @@ void split(float output1[R][C], float output2[R][C], float input[R][C]) {
   }
 #pragma endscop
 }
+
 void funcIx(float ix[R][C], float img[R][C]) {
-#pragma scop
   float w[2][4];
+#pragma HLS bind_storage variable = w impl = bram type = ram_2p rd_latency =   \
+    1 wr_latency = 1
+  float acc = 0;
+#pragma scop
   w[0][0] = -1 / (float)12.0;
   w[1][0] = 1 / (float)12.0;
   w[0][1] = -2 / (float)12.0;
   w[1][1] = 2 / (float)12.0;
   w[0][2] = -1 / (float)12.0;
   w[1][2] = 1 / (float)12.0;
-#pragma HLS bind_storage variable = w impl = bram type = ram_2p rd_latency =   \
-    1 wr_latency = 1
-  float acc = 0;
   for (int r = 1; r < R - 1; r++) {
 #pragma HLS pipeline II = 1300
     for (int c = 1; c < C - 1; c++) {
@@ -43,39 +45,29 @@ void funcIx(float ix[R][C], float img[R][C]) {
         for (int v = 0; v < 3; v++) {
 #pragma HLS pipeline II = 6
           acc = add_f32(acc, mul_f32(img[r + 2 * u - 1][c + v - 1], w[u][v]));
-          // ix[r][c] = add_f32(
-          //          add_f32(add_f32(mul_f32(img[r - 1][c - 1], (-1 /
-          //          (float)12.0)),
-          //                          mul_f32(img[r + 1][c - 1], (1 /
-          //                          (float)12.0))),
-          //                  add_f32(mul_f32(img[r - 1][c], (-2 /
-          //                  (float)12.0)),
-          //                          mul_f32(img[r + 1][c], (2 /
-          //                          (float)12.0)))),
-          //          add_f32(mul_f32(img[r - 1][c + 1], (-1 / (float)12.0)),
-          //                  mul_f32(img[r + 1][c + 1], (1 / (float)12.0))));
         }
       }
       ix[r][c] = acc;
     }
   }
+
 #pragma endscop
 }
 
 void funcIy(float iy[R][C], float img[R][C]) {
-#pragma scop
   float w[2][4];
+#pragma HLS bind_storage variable = w impl = bram type = ram_2p rd_latency =   \
+    1 wr_latency = 1
+  float acc = 0;
+#pragma scop
   w[0][0] = -1 / (float)12.0;
   w[1][0] = 1 / (float)12.0;
   w[0][1] = -2 / (float)12.0;
   w[1][1] = 2 / (float)12.0;
   w[0][2] = -1 / (float)12.0;
   w[1][2] = 1 / (float)12.0;
-#pragma HLS bind_storage variable = w impl = bram type = ram_2p rd_latency =   \
-    1 wr_latency = 1
-  float acc = 0;
   for (int r = 1; r < R - 1; r++) {
-#pragma HLS pipeline II = 1300
+#pragma HLS pipeline II = 1210
     for (int c = 1; c < C - 1; c++) {
 #pragma HLS pipeline II = 40
       acc = 0;
@@ -83,66 +75,57 @@ void funcIy(float iy[R][C], float img[R][C]) {
 #pragma HLS pipeline II = 18
         for (int v = 0; v < 3; v++) {
 #pragma HLS pipeline II = 6
-          acc = add_f32(acc, mul_f32(img[r + v - 1][c + 2 * u - 1], w[u][v]));
+          acc += img[r + v - 1][c + 2 * u - 1] * w[u][v];
         }
       }
       iy[r][c] = acc;
-
-      // iy[r][c] = add_f32(
-      //    add_f32(add_f32(mul_f32(img[r - 1][c - 1], (-1 / (float)12.0)),
-      //                    mul_f32(img[r - 1][c + 1], (1 / (float)12.0))),
-      //            add_f32(mul_f32(img[r][c - 1], (-2 / (float)12.0)),
-      //                    mul_f32(img[r][c + 1], (2 / (float)12.0)))),
-      //    add_f32(mul_f32(img[r + 1][c - 1], (-1 / (float)12.0)),
-      //            mul_f32(img[r + 1][c + 1], (1 / (float)12.0))));
     }
   }
 #pragma endscop
 }
 
-void funcIxx(float ixx[R][C], float ix[R][C]) {
+void funcIt(float it[R][C], float img[R][C], float prev[R][C]) {
+
 #pragma scop
-  float v;
-  for (int r = 0; r < R - 2; r++) {
-#pragma HLS pipeline II = 32
-    for (int c = 0; c < C - 2; c++) {
+  for (int r = 1; r < R - 1; r++) {
+#pragma HLS pipeline II = 36
+    for (int c = 1; c < C - 1; c++) {
 #pragma HLS pipeline II = 1
-      v = ix[r + 1][c + 1];
-      ixx[r + 1][c + 1] = mul_f32(v, v);
+      it[r][c] = img[r][c] - prev[r][c];
     }
   }
 #pragma endscop
 }
 
-void funcIyy(float iyy[R][C], float iy[R][C]) {
+void funcIaa(float iaa[R][C], float ia[R][C]) {
 #pragma scop
   float v;
   for (int r = 1; r < R - 1; r++) {
-#pragma HLS pipeline II = 32
+#pragma HLS pipeline II = 36
     for (int c = 1; c < C - 1; c++) {
 #pragma HLS pipeline II = 1
-      v = iy[r][c];
-      iyy[r][c] = mul_f32(v, v);
+      v = ia[r][c];
+      iaa[r][c] = v * v;
     }
   }
 #pragma endscop
 }
 
-void funcIxy(float ixy[R][C], float ix[R][C], float iy[R][C]) {
+void funcIab(float iab[R][C], float ia[R][C], float ib[R][C]) {
 #pragma scop
   for (int r = 1; r < R - 1; r++) {
-#pragma HLS pipeline II = 32
+#pragma HLS pipeline II = 36
     for (int c = 1; c < C - 1; c++) {
 #pragma HLS pipeline II = 1
-      ixy[r][c] = mul_f32(ix[r][c], iy[r][c]);
+      iab[r][c] = ia[r][c] * ib[r][c];
     }
   }
 #pragma endscop
 }
 
 void funcS(float sxx[R][C], float ixx[R][C]) {
-  float acc = 0;
 #pragma scop
+  float acc = 0;
   for (int r = 2; r < R - 2; r++) {
 #pragma HLS pipeline II = 1800
     for (int c = 2; c < C - 2; c++) {
@@ -152,17 +135,10 @@ void funcS(float sxx[R][C], float ixx[R][C]) {
 #pragma HLS pipeline II = 20
         for (int v = 0; v < 3; v++) {
 #pragma HLS pipeline II = 6
-          acc = add_f32(acc, ixx[r + u - 1][c + v - 1]);
+          acc = acc + ixx[r + u - 1][c + v - 1];
         }
       }
       sxx[r][c] = acc;
-
-      // sxx[r][c] =
-      //    add_f32(add_f32(add_f32(add_f32(ixx[r - 1][c - 1], ixx[r - 1][c]),
-      //                            add_f32(ixx[r - 1][c + 1], ixx[r][c - 1])),
-      //                    add_f32(add_f32(ixx[r][c], ixx[r][c + 1]),
-      //                            add_f32(ixx[r + 1][c - 1], ixx[r + 1][c]))),
-      //            ixx[r + 1][c + 1]);
     }
   }
 #pragma endscop
@@ -173,50 +149,50 @@ void funcDet(float det[R][C], float sxx[R][C], float syy[R][C],
 #pragma scop
   float v;
   for (int r = 2; r < R - 2; r++) {
-#pragma HLS pipeline II = 32
+#pragma HLS pipeline II = 36
     for (int c = 2; c < C - 2; c++) {
 #pragma HLS pipeline II = 1
       v = sxy[r][c];
-      det[r][c] = sub_f32(mul_f32(sxx[r][c], syy[r][c]), mul_f32(v, v));
+      det[r][c] = sub_f32(sxx[r][c] * syy[r][c], v * v) + (float)1e-05;
     }
   }
 #pragma endscop
 }
 
-void funcTrace(float trace[R][C], float sxx[R][C], float syy[R][C]) {
+void funcFlowLK(float flow[R][C][2], float det[R][C], float sxx[R][C],
+                float syy[R][C], float sxy[R][C], float sxt[R][C],
+                float syt[R][C]) {
 #pragma scop
-  for (int r = 2; r < R - 2; r++) {
-#pragma HLS pipeline II = 32
-    for (int c = 2; c < C - 2; c++) {
-#pragma HLS pipeline II = 1
-      trace[r][c] = add_f32(sxx[r][c], syy[r][c]);
-    }
-  }
-#pragma endscop
-}
-void funcHarris(float harris[R][C], float det[R][C], float trace[R][C]) {
-#pragma scop
-  float v;
-  for (int r = 2; r < R - 2; r++) {
-#pragma HLS pipeline II = 32
-    for (int c = 2; c < C - 2; c++) {
-#pragma HLS pipeline II = 1
-      v = trace[r][c];
-      harris[r][c] = sub_f32(det[r][c], mul_f32((float)0.04, mul_f32(v, v)));
+  for (int r = 4; r < R - 4; r++) {
+#pragma HLS pipeline II = 64
+    for (int c = 4; c < C - 4; c++) {
+#pragma HLS pipeline II = 2
+      float _sxt = sxt[r][c];
+      float _syt = syt[r][c];
+      float d = div_f32((float)1.0, det[r][c]);
+      flow[r][c][0] = d * (sxy[r][c] * _syt - syy[r][c] * _sxt);
+      flow[r][c][1] = d * (sxx[r][c] * _syt - sxy[r][c] * _sxt);
     }
   }
 #pragma endscop
 }
 
-void harris_hir(float harris[R][C], float img[R][C]) {
+void optical_flow_hir(float flow[R][C][2], float img[R][C], float prev[R][C]) {
 #pragma HLS INTERFACE port = img storage_type = ram_1p rd_latency = 1
-#pragma HLS INTERFACE port = harris storage_type = ram_1p wr_latency = 1
+#pragma HLS INTERFACE port = prev storage_type = ram_1p rd_latency = 1
+#pragma HLS INTERFACE port = flow storage_type = ram_1p wr_latency = 1
 
   float img1[R][C];
 #pragma HLS bind_storage variable = img1 impl = bram type =                    \
     ram_2p rd_latency = 1 wr_latency = 1
   float img2[R][C];
 #pragma HLS bind_storage variable = img2 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
+  float img3[R][C];
+#pragma HLS bind_storage variable = img3 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
+  float img4[R][C];
+#pragma HLS bind_storage variable = img4 impl = bram type =                    \
     ram_2p rd_latency = 1 wr_latency = 1
   float ix[R][C];
 #pragma HLS bind_storage variable = ix impl = bram type = ram_2p rd_latency =  \
@@ -266,27 +242,44 @@ void harris_hir(float harris[R][C], float img[R][C]) {
   float sxy[R][C];
 #pragma HLS bind_storage variable = sxy impl = bram type = ram_2p rd_latency = \
     1 wr_latency = 1
+  float it[R][C];
+#pragma HLS bind_storage variable = it impl = bram type = ram_2p rd_latency =  \
+    1 wr_latency = 1
+  float ixt[R][C];
+#pragma HLS bind_storage variable = ixt impl = bram type = ram_2p rd_latency = \
+    1 wr_latency = 1
+  float iyt[R][C];
+#pragma HLS bind_storage variable = iyt impl = bram type = ram_2p rd_latency = \
+    1 wr_latency = 1
+  float sxt[R][C];
+#pragma HLS bind_storage variable = sxt impl = bram type = ram_2p rd_latency = \
+    1 wr_latency = 1
+  float syt[R][C];
+#pragma HLS bind_storage variable = syt impl = bram type = ram_2p rd_latency = \
+    1 wr_latency = 1
   float det[R][C];
 #pragma HLS bind_storage variable = det impl = bram type = ram_2p rd_latency = \
     1 wr_latency = 1
-  float trace[R][C];
-#pragma HLS bind_storage variable = trace impl = bram type =                   \
-    ram_2p rd_latency = 1 wr_latency = 1
 
   split(img1, img2, img);
+  split(img3, img4, img2);
   funcIx(ix, img1);
   split(ix1, ix2, ix);
-  funcIy(iy, img2);
+  funcIy(iy, img3);
   split(iy1, iy2, iy);
-  funcIxx(ixx, ix1);
-  funcIyy(iyy, iy1);
-  funcIxy(ixy, ix2, iy2);
+  funcIaa(ixx, ix1);
+  funcIaa(iyy, iy1);
+  funcIab(ixy, ix2, iy2);
   funcS(sxx, ixx);
   split(sxx1, sxx2, sxx);
   funcS(syy, iyy);
   split(syy1, syy2, syy);
   funcS(sxy, ixy);
   funcDet(det, sxx1, syy1, sxy);
-  funcTrace(trace, sxx2, syy2);
-  funcHarris(harris, det, trace);
+  funcIt(it, img4, prev);
+  funcIab(ixt, ix, it);
+  funcIab(iyt, iy, it);
+  funcS(sxt, ixt);
+  funcS(syt, iyt);
+  funcFlowLK(flow, det, sxx, syy, sxy, sxt, syt);
 }

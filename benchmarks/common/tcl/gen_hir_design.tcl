@@ -49,10 +49,9 @@ if { [llength $files] != 0 } {
 create_project -part $partName  $top_module_name $output_dir
 set_msg_config -severity {CRITICAL WARNING} -new_severity ERROR
 add_files -fileset sources_1 $sv_files
-add_files -fileset constrs_1  $constraints_xdc
+import_files -fileset constrs_1 -force -norecurse $constraints_xdc
 read_xdc $constraints_xdc -mode out_of_context
 read_mem $mem_files
-
 if {[llength $xci_files]} {
     foreach {xci_path} $xci_files {
         read_ip $xci_path

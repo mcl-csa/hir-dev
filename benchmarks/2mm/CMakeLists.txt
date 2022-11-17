@@ -33,4 +33,5 @@ add_vivado_project_target(kernel_2mm_prj
     INCLUDES
     ../../includes/helper.sv
     ../../includes/xil_primitives.sv
+    testbench/2mm_hls.sv
 )

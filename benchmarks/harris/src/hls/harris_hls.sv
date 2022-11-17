@@ -26,6 +26,7 @@ harris_hls_0 your_instance_name (
   .ap_ready(ap_ready),                // output wire ap_ready
   .harris_address0(harris_address0),  // output wire [9 : 0] harris_address0
   .harris_d0(harris_d0),              // output wire [31 : 0] harris_d0
+  .harris_q0(32'd0),
   .img_address0(img_address0),        // output wire [9 : 0] img_address0
   .img_q0(img_q0)                    // input wire [31 : 0] img_q0
 );

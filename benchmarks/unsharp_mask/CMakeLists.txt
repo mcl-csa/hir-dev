@@ -33,4 +33,5 @@ add_vivado_project_target(unsharp_mask_prj
     INCLUDES
     ../../includes/helper.sv
     ../../includes/xil_primitives.sv
+    src/hls/unsharp_mask_hls.sv
 )

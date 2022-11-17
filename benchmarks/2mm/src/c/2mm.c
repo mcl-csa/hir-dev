@@ -28,9 +28,9 @@ void kernel_2mm_hir(DATA_TYPE alpha, DATA_TYPE beta,
   /* D := alpha*A*B*C + beta*D */
   DATA_TYPE acc;
   for (i = 0; i < _PB_NI; i++)
-#pragma HLS pipeline II = 6500
+#pragma HLS pipeline II = 400
     for (j = 0; j < _PB_NJ; j++) {
-#pragma HLS pipeline II = 200
+#pragma HLS pipeline II = 50
       acc = 0;
       for (k = 0; k < _PB_NK; ++k)
 #pragma HLS pipeline II = 6
@@ -40,9 +40,9 @@ void kernel_2mm_hir(DATA_TYPE alpha, DATA_TYPE beta,
 
   float acc2;
   for (i = 0; i < _PB_NI; i++)
-#pragma HLS pipeline II = 6500
+#pragma HLS pipeline II = 400
     for (j = 0; j < _PB_NL; j++) {
-#pragma HLS pipeline II = 200
+#pragma HLS pipeline II = 50
       acc2 = mul_f32(D[i][j], beta);
       for (k = 0; k < _PB_NJ; ++k) {
 #pragma HLS pipeline II = 6

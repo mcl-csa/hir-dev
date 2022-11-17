@@ -1,34 +1,33 @@
-add_sv_target(harris 
+add_sv_target(dus 
     MLIR 
-    src/mlir/harris_hir.mlir
+    src/mlir/dus_hir.mlir
 
     OUTPUT_SV
-    src/mlir/harris_hir.sv
+    src/mlir/dus_hir.sv
 )
 
-add_vivado_project_target(harris_prj
+add_vivado_project_target(dus_prj
     TOP_MODULE
-    harris_hir
+    dus_hir
 
     HLS_MODULE
-    harris_hls
+    dus_hls
 
     HLS_FILE
-    src/hls/harris.cpp
+    src/hls/dus.cpp
 
     SIM_FILES
     ../../includes/tb_helpers.sv
-    testbench/tb_harris.sv
+    testbench/tb_dus.sv
     testbench/img.mem
 
     DEPENDENCE
     ADD_F32
-    SUB_F32
     MUL_F32
-    harris
+    dus
 
     INCLUDES
     ../../includes/helper.sv
     ../../includes/xil_primitives.sv
-    src/hls/harris_hls.sv
+    src/hls/dus_hls.sv
 )

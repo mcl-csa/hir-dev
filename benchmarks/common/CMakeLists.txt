@@ -1,5 +1,6 @@
 add_vivado_ip_target(MUL_F32 tcl/multiplier_f32.tcl)
 add_vivado_ip_target(ADD_F32 tcl/adder_f32.tcl)
 add_vivado_ip_target(SUB_F32 tcl/subtract_f32.tcl)
+add_vivado_ip_target(DIV_F32 tcl/div_f32_ip.tcl)
 add_vivado_ip_target(GT_F32 tcl/gt_f32.tcl)
 add_vivado_ip_target(LT_F32 tcl/lt_f32.tcl)

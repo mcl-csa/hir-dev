@@ -246,7 +246,27 @@
       .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
     );
   endmodule
-  
+
+  module div_f32(
+    input wire[31:0] a ,
+    input  wire[31:0] b , 
+    input t  , 
+    input clk, 
+    input rst, 
+    output wire[31:0] out 
+  );
+    div_f32_ip inst (
+      .aclk(clk),                                  // input wire aclk
+      .s_axis_a_tvalid(1'b1),            // input wire s_axis_a_tvalid
+      .s_axis_a_tdata(a),              // input wire [31 : 0] s_axis_a_tdata
+      .s_axis_b_tvalid(1'b1),            // input wire s_axis_b_tvalid
+      .s_axis_b_tdata(b),              // input wire [31 : 0] s_axis_b_tdata
+      .m_axis_result_tvalid(),  // output wire m_axis_result_tvalid
+      .m_axis_result_tdata(out)    // output wire [31 : 0] m_axis_result_tdata
+    );
+  endmodule
+
+
   module ult_f32(
     input wire[31:0] a ,
     input  wire[31:0] b , 
