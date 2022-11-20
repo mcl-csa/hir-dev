@@ -37,15 +37,12 @@ void convX(DATATYPE output[IMG_SIZE][IMG_SIZE],
   float acc = 0;
 #pragma scop
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
-//#pragma HLS pipeline II = 870
-#pragma HLS pipeline II = 1920
+#pragma HLS pipeline II = 870
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
-//#pragma HLS pipeline II = 32
-#pragma HLS pipeline II = 60
+#pragma HLS pipeline II = 32
       acc = 0;
       for (int kk = 0; kk < KERNEL_SIZE; kk++) {
-//#pragma HLS pipeline II = 6
-#pragma HLS pipeline II = 10
+#pragma HLS pipeline II = 6
         acc = add_f32(acc, mul_f32(kernel[kk], img[i][j + kk]));
       }
       output[i][j] = acc;
@@ -60,12 +57,12 @@ void convY(DATATYPE output[IMG_SIZE][IMG_SIZE],
   float acc = 0;
 #pragma scop
   for (int i = 0; i < IMG_SIZE - KERNEL_SIZE; i++) {
-#pragma HLS pipeline II = 1920
+#pragma HLS pipeline II = 870
     for (int j = 0; j < IMG_SIZE - KERNEL_SIZE; j++) {
-#pragma HLS pipeline II = 60
+#pragma HLS pipeline II = 32
       acc = 0;
       for (int kk = 0; kk < KERNEL_SIZE; kk++) {
-#pragma HLS pipeline II = 10
+#pragma HLS pipeline II = 6
         acc = add_f32(acc, mul_f32(kernel[kk], img[i + kk][j]));
       }
       output[i][j] = acc;

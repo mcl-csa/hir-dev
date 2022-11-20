@@ -45,11 +45,11 @@ module attributes {hir.hls} {
           %15 = func.call @mul_f32(%13, %14) {result_delays = [4]} : (f32, f32) -> f32
           %16 = func.call @add_f32(%12, %15) {result_delays = [5]} : (f32, f32) -> f32
           affine.store %16, %9[] {hir.memref_port = 1 : i64} : memref<f32>
-        } {II = 10 : i64}
+        } {II = 6 : i64}
         %11 = affine.load %9[] {hir.memref_port = 0 : i64, result_delays = [0]} : memref<f32>
         affine.store %11, %8[%arg4, %arg5] {hir.memref_port = 1 : i64} : memref<32x32xf32>
-      } {II = 60 : i64}
-    } {II = 1920 : i64}
+      } {II = 32 : i64}
+    } {II = 870 : i64}
     %10 = memref.alloca() {hir.memref.ports = [{rd_latency = 0 : i64}, {wr_latency = 1 : i64}], mem_kind = "reg"} : memref<f32>
     affine.store %cst_0, %10[] {hir.memref_port = 1 : i64} : memref<f32>
     affine.for %arg4 = 0 to 27 {
@@ -62,11 +62,11 @@ module attributes {hir.hls} {
           %15 = func.call @mul_f32(%13, %14) {result_delays = [4]} : (f32, f32) -> f32
           %16 = func.call @add_f32(%12, %15) {result_delays = [5]} : (f32, f32) -> f32
           affine.store %16, %10[] {hir.memref_port = 1 : i64} : memref<f32>
-        } {II = 10 : i64}
+        } {II = 6 : i64}
         %11 = affine.load %10[] {hir.memref_port = 0 : i64, result_delays = [0]} : memref<f32>
         affine.store %11, %7[%arg4, %arg5] {hir.memref_port = 1 : i64} : memref<32x32xf32>
-      } {II = 60 : i64}
-    } {II = 1920 : i64}
+      } {II = 32 : i64}
+    } {II = 870 : i64}
     affine.for %arg4 = 0 to 32 {
       affine.for %arg5 = 0 to 32 {
         %11 = affine.load %7[%arg4, %arg5] {hir.memref_port = 0 : i64, result_delays = [1]} : memref<32x32xf32>

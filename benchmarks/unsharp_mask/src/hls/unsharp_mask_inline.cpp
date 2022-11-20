@@ -19,15 +19,15 @@ void unsharp_mask_hls(float img[IMG_SIZE][IMG_SIZE],
   float bluryData[IMG_SIZE][IMG_SIZE];
   float bluryData0[IMG_SIZE][IMG_SIZE];
   float bluryData1[IMG_SIZE][IMG_SIZE];
-//#pragma HLS STREAM depth = 4 type = pipo variable = bluryData1
+#pragma HLS STREAM depth = 4 type = pipo variable = bluryData1
 
   float imgtemp[IMG_SIZE][IMG_SIZE];
   float img0[IMG_SIZE][IMG_SIZE];
 
   float img1[IMG_SIZE][IMG_SIZE];
-//#pragma HLS STREAM depth = 4 type = pipo variable = img1
+#pragma HLS STREAM depth = 4 type = pipo variable = img1
   float img2[IMG_SIZE][IMG_SIZE];
-//#pragma HLS STREAM depth = 5 type = pipo variable = img2
+#pragma HLS STREAM depth = 5 type = pipo variable = img2
 
   float sharpImgData[IMG_SIZE][IMG_SIZE];
 

@@ -117,7 +117,7 @@ unsharp_mask_hls_0 inst (
   .kernelDataY_ce0(kernelY_p0_rd_en),            // output wire kernelDataY_ce0
   .ap_clk(clk),                              // input wire ap_clk
   .ap_rst(rst),                              // input wire ap_rst
-  .ap_start(tstart),                          // input wire ap_start
+  .ap_start(1'b1),                          // input wire ap_start
   .ap_done(),                            // output wire ap_done
   .ap_ready(),                          // output wire ap_ready
   .ap_idle(),                            // output wire ap_idle

@@ -128,33 +128,19 @@ void funcFlowLK(float flow[R][C][2], float det[R][C], float sxx[R][C],
   }
 }
 
-void optical_flow_hls_slow(float flow[R][C][2], float img[R][C],
-                           float prev[R][C]) {
-//#pragma HLS DATAFLOW
+void optical_flow_hls(float flow[R][C][2], float img[R][C], float prev[R][C]) {
 #pragma HLS INLINE recursive
 #pragma HLS INTERFACE mode = ap_memory port = img storage_type = ram_1p
 #pragma HLS INTERFACE mode = ap_memory port = prev storage_type = ram_1p
 #pragma HLS INTERFACE mode = ap_memory port = flow storage_type = ram_1p
 
-  float img1[R][C];
-  float img2[R][C];
-  float img3[R][C];
-  float img4[R][C];
   float ix[R][C];
-  float ix1[R][C];
-  float ix2[R][C];
   float iy[R][C];
-  float iy1[R][C];
-  float iy2[R][C];
   float ixx[R][C];
   float iyy[R][C];
   float ixy[R][C];
   float sxx[R][C];
-  float sxx1[R][C];
-  float sxx2[R][C];
   float syy[R][C];
-  float syy1[R][C];
-  float syy2[R][C];
   float sxy[R][C];
   float it[R][C];
   float ixt[R][C];
@@ -163,22 +149,16 @@ void optical_flow_hls_slow(float flow[R][C][2], float img[R][C],
   float syt[R][C];
   float det[R][C];
 
-  split(img1, img2, img);
-  split(img3, img4, img2);
-  funcIx(ix, img1);
-  split(ix1, ix2, ix);
-  funcIy(iy, img3);
-  split(iy1, iy2, iy);
-  funcIaa(ixx, ix1);
-  funcIaa(iyy, iy1);
-  funcIab(ixy, ix2, iy2);
+  funcIx(ix, img);
+  funcIy(iy, img);
+  funcIaa(ixx, ix);
+  funcIaa(iyy, iy);
+  funcIab(ixy, ix, iy);
   funcS(sxx, ixx);
-  split(sxx1, sxx2, sxx);
   funcS(syy, iyy);
-  split(syy1, syy2, syy);
   funcS(sxy, ixy);
-  funcDet(det, sxx1, syy1, sxy);
-  funcIt(it, img4, prev);
+  funcDet(det, sxx, syy, sxy);
+  funcIt(it, img, prev);
   funcIab(ixt, ix, it);
   funcIab(iyt, iy, it);
   funcS(sxt, ixt);
@@ -186,8 +166,9 @@ void optical_flow_hls_slow(float flow[R][C][2], float img[R][C],
   funcFlowLK(flow, det, sxx, syy, sxy, sxt, syt);
 }
 
-void optical_flow_hls(float flow[R][C][2], float img[R][C], float prev[R][C]) {
-//#pragma HLS DATAFLOW
+void optical_flow_hls_df(float flow[R][C][2], float img[R][C],
+                         float prev[R][C]) {
+#pragma HLS DATAFLOW
 #pragma HLS INLINE recursive
 #pragma HLS INTERFACE mode = ap_memory port = img storage_type = ram_1p
 #pragma HLS INTERFACE mode = ap_memory port = prev storage_type = ram_1p
@@ -200,9 +181,13 @@ void optical_flow_hls(float flow[R][C][2], float img[R][C], float prev[R][C]) {
   float ix[R][C];
   float ix1[R][C];
   float ix2[R][C];
+  float ix3[R][C];
+  float ix4[R][C];
   float iy[R][C];
   float iy1[R][C];
   float iy2[R][C];
+  float iy3[R][C];
+  float iy4[R][C];
   float ixx[R][C];
   float iyy[R][C];
   float ixy[R][C];
@@ -213,7 +198,11 @@ void optical_flow_hls(float flow[R][C][2], float img[R][C], float prev[R][C]) {
   float syy1[R][C];
   float syy2[R][C];
   float sxy[R][C];
+  float sxy1[R][C];
+  float sxy2[R][C];
   float it[R][C];
+  float it1[R][C];
+  float it2[R][C];
   float ixt[R][C];
   float iyt[R][C];
   float sxt[R][C];
@@ -224,21 +213,25 @@ void optical_flow_hls(float flow[R][C][2], float img[R][C], float prev[R][C]) {
   split(img3, img4, img2);
   funcIx(ix, img1);
   split(ix1, ix2, ix);
+  split(ix3, ix4, ix2);
   funcIy(iy, img3);
   split(iy1, iy2, iy);
+  split(iy3, iy4, iy2);
   funcIaa(ixx, ix1);
   funcIaa(iyy, iy1);
-  funcIab(ixy, ix2, iy2);
+  funcIab(ixy, ix3, iy3);
   funcS(sxx, ixx);
   split(sxx1, sxx2, sxx);
   funcS(syy, iyy);
   split(syy1, syy2, syy);
   funcS(sxy, ixy);
-  funcDet(det, sxx1, syy1, sxy);
+  split(sxy1, sxy2, sxy);
+  funcDet(det, sxx1, syy1, sxy1);
   funcIt(it, img4, prev);
-  funcIab(ixt, ix, it);
-  funcIab(iyt, iy, it);
+  split(it1, it2, it);
+  funcIab(ixt, ix4, it1);
+  funcIab(iyt, iy4, it2);
   funcS(sxt, ixt);
   funcS(syt, iyt);
-  funcFlowLK(flow, det, sxx, syy, sxy, sxt, syt);
+  funcFlowLK(flow, det, sxx2, syy2, sxy2, sxt, syt);
 }
