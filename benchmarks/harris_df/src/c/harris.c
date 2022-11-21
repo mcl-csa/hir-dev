@@ -10,6 +10,7 @@ float mul_f32(float a, float b);
 
 void split(float output1[R][C], float output2[R][C], float input[R][C]) {
 #pragma scop
+  // latency=32*32 = 1024
   for (int r = 0; r < R; r++) {
 #pragma HLS pipeline II = 32
     for (int c = 0; c < C; c++) {
@@ -23,6 +24,7 @@ void split(float output1[R][C], float output2[R][C], float input[R][C]) {
 }
 void funcIx(float ix[R][C], float img[R][C]) {
 #pragma scop
+  // latency=1300*30 = 39000
   float w[2][4];
   w[0][0] = -1 / (float)12.0;
   w[1][0] = 1 / (float)12.0;
@@ -64,6 +66,7 @@ void funcIx(float ix[R][C], float img[R][C]) {
 
 void funcIy(float iy[R][C], float img[R][C]) {
 #pragma scop
+  // latency=1300*30 = 39000
   float w[2][4];
   w[0][0] = -1 / (float)12.0;
   w[1][0] = 1 / (float)12.0;
@@ -102,6 +105,7 @@ void funcIy(float iy[R][C], float img[R][C]) {
 
 void funcIxx(float ixx[R][C], float ix[R][C]) {
 #pragma scop
+  // latency=32*30 = 960
   float v;
   for (int r = 0; r < R - 2; r++) {
 #pragma HLS pipeline II = 32
@@ -116,6 +120,7 @@ void funcIxx(float ixx[R][C], float ix[R][C]) {
 
 void funcIyy(float iyy[R][C], float iy[R][C]) {
 #pragma scop
+  // latency=32*30 = 960
   float v;
   for (int r = 1; r < R - 1; r++) {
 #pragma HLS pipeline II = 32
@@ -130,6 +135,7 @@ void funcIyy(float iyy[R][C], float iy[R][C]) {
 
 void funcIxy(float ixy[R][C], float ix[R][C], float iy[R][C]) {
 #pragma scop
+  // latency=32*30 = 960
   for (int r = 1; r < R - 1; r++) {
 #pragma HLS pipeline II = 32
     for (int c = 1; c < C - 1; c++) {
@@ -143,6 +149,7 @@ void funcIxy(float ixy[R][C], float ix[R][C], float iy[R][C]) {
 void funcS(float sxx[R][C], float ixx[R][C]) {
   float acc = 0;
 #pragma scop
+  // latency=1800*28 = 50400
   for (int r = 2; r < R - 2; r++) {
 #pragma HLS pipeline II = 1800
     for (int c = 2; c < C - 2; c++) {
@@ -171,6 +178,7 @@ void funcS(float sxx[R][C], float ixx[R][C]) {
 void funcDet(float det[R][C], float sxx[R][C], float syy[R][C],
              float sxy[R][C]) {
 #pragma scop
+  // latency=32*28=896
   float v;
   for (int r = 2; r < R - 2; r++) {
 #pragma HLS pipeline II = 32
@@ -185,6 +193,8 @@ void funcDet(float det[R][C], float sxx[R][C], float syy[R][C],
 
 void funcTrace(float trace[R][C], float sxx[R][C], float syy[R][C]) {
 #pragma scop
+  // latency=32*28=896
+  float v;
   for (int r = 2; r < R - 2; r++) {
 #pragma HLS pipeline II = 32
     for (int c = 2; c < C - 2; c++) {
@@ -196,6 +206,7 @@ void funcTrace(float trace[R][C], float sxx[R][C], float syy[R][C]) {
 }
 void funcHarris(float harris[R][C], float det[R][C], float trace[R][C]) {
 #pragma scop
+  // latency=32*28=896
   float v;
   for (int r = 2; r < R - 2; r++) {
 #pragma HLS pipeline II = 32
@@ -212,11 +223,29 @@ void harris_hir(float harris[R][C], float img[R][C]) {
 #pragma HLS INTERFACE port = img storage_type = ram_1p rd_latency = 1
 #pragma HLS INTERFACE port = harris storage_type = ram_1p wr_latency = 1
 
+  float img1[R][C];
+#pragma HLS bind_storage variable = img1 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
+  float img2[R][C];
+#pragma HLS bind_storage variable = img2 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
   float ix[R][C];
 #pragma HLS bind_storage variable = ix impl = bram type = ram_2p rd_latency =  \
     1 wr_latency = 1
+  float ix1[R][C];
+#pragma HLS bind_storage variable = ix1 impl = bram type = ram_2p rd_latency = \
+    1 wr_latency = 1
+  float ix2[R][C];
+#pragma HLS bind_storage variable = ix2 impl = bram type = ram_2p rd_latency = \
+    1 wr_latency = 1
   float iy[R][C];
 #pragma HLS bind_storage variable = iy impl = bram type = ram_2p rd_latency =  \
+    1 wr_latency = 1
+  float iy1[R][C];
+#pragma HLS bind_storage variable = iy1 impl = bram type = ram_2p rd_latency = \
+    1 wr_latency = 1
+  float iy2[R][C];
+#pragma HLS bind_storage variable = iy2 impl = bram type = ram_2p rd_latency = \
     1 wr_latency = 1
   float ixx[R][C];
 #pragma HLS bind_storage variable = ixx impl = bram type = ram_2p rd_latency = \
@@ -230,9 +259,21 @@ void harris_hir(float harris[R][C], float img[R][C]) {
   float sxx[R][C];
 #pragma HLS bind_storage variable = sxx impl = bram type = ram_2p rd_latency = \
     1 wr_latency = 1
+  float sxx1[R][C];
+#pragma HLS bind_storage variable = sxx1 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
+  float sxx2[R][C];
+#pragma HLS bind_storage variable = sxx2 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
   float syy[R][C];
 #pragma HLS bind_storage variable = syy impl = bram type = ram_2p rd_latency = \
     1 wr_latency = 1
+  float syy1[R][C];
+#pragma HLS bind_storage variable = syy1 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
+  float syy2[R][C];
+#pragma HLS bind_storage variable = syy2 impl = bram type =                    \
+    ram_2p rd_latency = 1 wr_latency = 1
   float sxy[R][C];
 #pragma HLS bind_storage variable = sxy impl = bram type = ram_2p rd_latency = \
     1 wr_latency = 1
@@ -242,16 +283,21 @@ void harris_hir(float harris[R][C], float img[R][C]) {
   float trace[R][C];
 #pragma HLS bind_storage variable = trace impl = bram type =                   \
     ram_2p rd_latency = 1 wr_latency = 1
-
-  funcIx(ix, img);
-  funcIy(iy, img);
-  funcIxx(ixx, ix);
-  funcIyy(iyy, iy);
-  funcIxy(ixy, ix, iy);
-  funcS(sxx, ixx);
-  funcS(syy, iyy);
-  funcS(sxy, ixy);
-  funcDet(det, sxx, syy, sxy);
-  funcTrace(trace, sxx, syy);
-  funcHarris(harris, det, trace);
+  // seq latency = 1024*5 + 39000*2 + 960*3+50400*3+896*3 = 239888
+  split(img1, img2, img);         // 1024
+  funcIx(ix, img1);               // 39000
+  split(ix1, ix2, ix);            // 1024
+  funcIy(iy, img2);               // 39000
+  split(iy1, iy2, iy);            // 1024
+  funcIxx(ixx, ix1);              // 960
+  funcIyy(iyy, iy1);              // 960
+  funcIxy(ixy, ix2, iy2);         // 960
+  funcS(sxx, ixx);                // 50400
+  split(sxx1, sxx2, sxx);         // 1024
+  funcS(syy, iyy);                // 50400
+  split(syy1, syy2, syy);         // 1024
+  funcS(sxy, ixy);                // 50400
+  funcDet(det, sxx1, syy1, sxy);  // 896
+  funcTrace(trace, sxx2, syy2);   // 896
+  funcHarris(harris, det, trace); // 896
 }

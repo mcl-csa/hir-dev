@@ -71,6 +71,7 @@ void unsharp_mask_hls(float img[IMG_SIZE][IMG_SIZE],
                       float kernelDataX[KERNEL_SIZE],
                       float kernelDataY[KERNEL_SIZE]) {
 
+#pragma HLS DATAFLOW
 #pragma HLS INLINE recursive
 #pragma HLS INTERFACE mode = ap_memory port = img storage_type = rom_1p
 #pragma HLS INTERFACE mode = ap_memory port = mask_img storage_type = ram_1p
@@ -81,10 +82,25 @@ void unsharp_mask_hls(float img[IMG_SIZE][IMG_SIZE],
 
   float blurxData[IMG_SIZE][IMG_SIZE];
   float bluryData[IMG_SIZE][IMG_SIZE];
+  float bluryData0[IMG_SIZE][IMG_SIZE];
+  float bluryData1[IMG_SIZE][IMG_SIZE];
+#pragma HLS STREAM depth = 3 type = pipo variable = bluryData1
+
+  float imgtemp[IMG_SIZE][IMG_SIZE];
+  float img0[IMG_SIZE][IMG_SIZE];
+
+  float img1[IMG_SIZE][IMG_SIZE];
+#pragma HLS STREAM depth = 4 type = pipo variable = img1
+  float img2[IMG_SIZE][IMG_SIZE];
+#pragma HLS STREAM depth = 5 type = pipo variable = img2
+
   float sharpImgData[IMG_SIZE][IMG_SIZE];
 
-  convX(blurxData, img, kernelDataX);
+  split(imgtemp, img0, img);
+  split(img2, img1, imgtemp);
+  convX(blurxData, img0, kernelDataX);
   convY(bluryData, blurxData, kernelDataY);
-  sharpen(sharpImgData, img, bluryData, 3);
-  mask(mask_img, img, bluryData, sharpImgData, 0.001);
+  split(bluryData0, bluryData1, bluryData);
+  sharpen(sharpImgData, img1, bluryData0, 3);
+  mask(mask_img, img2, bluryData1, sharpImgData, 0.001);
 }

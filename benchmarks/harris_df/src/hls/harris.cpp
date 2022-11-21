@@ -143,27 +143,42 @@ void harris_hls(float harris[R][C], float img[R][C]) {
 #pragma HLS INTERFACE mode = ap_memory port = img storage_type = ram_1p
 #pragma HLS INTERFACE mode = ap_memory port = harris storage_type = ram_1p
 
+  float img1[R][C];
+  float img2[R][C];
   float ix[R][C];
+  float ix1[R][C];
+  float ix2[R][C];
   float iy[R][C];
+  float iy1[R][C];
+  float iy2[R][C];
   float ixx[R][C];
   float iyy[R][C];
   float ixy[R][C];
   float sxx[R][C];
+  float sxx1[R][C];
+  float sxx2[R][C];
   float syy[R][C];
+  float syy1[R][C];
+  float syy2[R][C];
   float sxy[R][C];
 #pragma HLS STREAM depth = 3 type = pipo variable = sxy
   float det[R][C];
   float trace[R][C];
 
-  funcIx(ix, img);
-  funcIy(iy, img);
-  funcIxx(ixx, ix);
-  funcIyy(iyy, iy);
-  funcIxy(ixy, ix, iy);
+  split(img1, img2, img);
+  funcIx(ix, img1);
+  split(ix1, ix2, ix);
+  funcIy(iy, img2);
+  split(iy1, iy2, iy);
+  funcIxx(ixx, ix1);
+  funcIyy(iyy, iy1);
+  funcIxy(ixy, ix2, iy2);
   funcS(sxx, ixx);
+  split(sxx1, sxx2, sxx);
   funcS(syy, iyy);
+  split(syy1, syy2, syy);
   funcS(sxy, ixy);
-  funcDet(det, sxx, syy, sxy);
-  funcTrace(trace, sxx, syy);
+  funcDet(det, sxx1, syy1, sxy);
+  funcTrace(trace, sxx2, syy2);
   funcHarris(harris, det, trace);
 }

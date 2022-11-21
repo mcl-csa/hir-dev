@@ -25,6 +25,7 @@ void kernel_2mm_hir(DATA_TYPE alpha, DATA_TYPE beta,
     1 wr_latency = 1
 
 #pragma scop
+  // latency=8*400+8*400
   /* D := alpha*A*B*C + beta*D */
   DATA_TYPE acc;
   for (i = 0; i < _PB_NI; i++)
