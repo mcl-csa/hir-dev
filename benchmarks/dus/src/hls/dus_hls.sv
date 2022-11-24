@@ -37,7 +37,7 @@ input wire [31 : 0] img_q0;
     .dus_ce0(dus_ce0),
     .dus_we0(dus_we0),
     .img_ce0(img_ce0),
-    //.img_we0(img_we0),
+    .img_we0(img_we0),
     .ap_clk(clk),
     .ap_rst(rst),
     .ap_start(ap_start),
@@ -46,9 +46,9 @@ input wire [31 : 0] img_q0;
     .ap_idle(ap_idle),
     .dus_address0(dus_address0),
     .dus_d0(dus_d0),
-    //.dus_q0(dus_q0),
+    .dus_q0(dus_q0),
     .img_address0(img_address0),
-    //.img_d0(img_d0),
+    .img_d0(img_d0),
     .img_q0(img_q0)
   );
 endmodule

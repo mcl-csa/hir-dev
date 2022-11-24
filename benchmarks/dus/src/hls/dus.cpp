@@ -48,7 +48,7 @@ void upsample(float out[IMG_SIZE][IMG_SIZE],
 
 void dus_hls(float dus[IMG_SIZE][IMG_SIZE], float img[IMG_SIZE][IMG_SIZE]) {
   float down[IMG_SIZE / 2][IMG_SIZE / 2];
-//#pragma HLS DATAFLOW
+#pragma HLS DATAFLOW
 #pragma HLS INLINE recursive
 #pragma HLS interface mode = ap_memory port = img storage_type = rom_1p
 #pragma HLS interface mode = ap_memory port = dus storage_type = ram_1p
