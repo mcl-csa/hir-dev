@@ -153,7 +153,7 @@ function (add_vivado_project_target name)
   add_custom_command(
     OUTPUT ${hls_zip} ${hlsLogFile}
     DEPENDS  ${VITIS_HLS} ${gen_hls_design_tcl} ${HLS_FILE}
-    COMMAND faketime 2021-01-01 ${VITIS_HLS} -f ${gen_hls_design_tcl} ${part_name} ${HLS_FILE} ${hls_dir} ${ARG_HLS_MODULE} > ${hlsLogFile}
+    COMMAND ${VITIS_HLS} -f ${gen_hls_design_tcl} ${part_name} ${HLS_FILE} ${hls_dir} ${ARG_HLS_MODULE} > ${hlsLogFile}
   )
 
   set (logfile ${CMAKE_CURRENT_BINARY_DIR}/${name}.log)
