@@ -1,11 +1,18 @@
 module clk_generator(clk,rst, tstart);
   output reg clk;// = 1'b0;
   output reg rst;// = 1'b0;
-  output reg tstart;// = 1'b0;
+  output tstart;// = 1'b0;
 
+  int  counter;
   initial begin
     clk <= 1'b0;
   end
+  always begin
+    #1
+    clk <= !clk;
+  end
+
+
   initial begin
     rst<=1'b0;
     #1
@@ -13,15 +20,16 @@ module clk_generator(clk,rst, tstart);
     #6
     rst<=1'b0;
   end
-  initial begin
-    tstart <= 1'b0;
-    #40 tstart <= 1'b1;
-    #2 tstart <= 1'b0;
+
+  always@(posedge clk) begin
+    if(rst)
+      counter <= 0;
+    else if(counter < 128)
+      counter <= counter+1;
   end
-  always begin
-    #1
-    clk <= !clk;
-  end
+
+  assign tstart = counter == 20;
+  
 endmodule
 
 module memref_wr(mem,wr_en,addr,din,clk); 
