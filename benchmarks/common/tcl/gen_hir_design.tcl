@@ -21,6 +21,9 @@ while { $idx < $argc } {
         lappend sv_files $arg
     } elseif {$ext == ".xci"} {
         lappend xci_files $arg
+    } elseif {$arg == "-sv_dir"} {
+        incr idx
+        set sv_dir [lindex $argv $idx]
     } elseif {$arg == "-sim"} {
         break
     }
@@ -38,17 +41,20 @@ while { $idx < $argc } {
     incr idx
 }
 
-set files [glob -nocomplain "$output_dir/*"]
+set hir_sv_files [glob -nocomplain "$sv_dir/*.sv"]
+puts "Reading input sv from $sv_dir"
 puts "Writing project outputs to $output_dir"
-if { [llength $files] != 0 } {
+if {[file exist $output_dir]} {
     # clear folder contents
     puts "deleting contents of $output_dir"
-    file delete -force {*}[glob -directory $output_dir *];
+    #file delete -force {*}[glob -directory $output_dir *];
+    file delete -force $output_dir;
 }
 
 create_project -part $partName  $top_module_name $output_dir
 set_msg_config -severity {CRITICAL WARNING} -new_severity ERROR
 add_files -fileset sources_1 $sv_files
+add_files -fileset sources_1 $hir_sv_files
 import_files -fileset constrs_1 -force -norecurse $constraints_xdc
 read_xdc $constraints_xdc -mode out_of_context
 read_mem $mem_files

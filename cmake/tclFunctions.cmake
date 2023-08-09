@@ -41,11 +41,11 @@ function (add_sv_target name)
   cmake_parse_arguments(ARG "" "MLIR"
                           "OUTPUT_SV" ${ARGN} )
   if(NOT ARG_MLIR)  
-    message(FATAL_ERROR "Could not find any sv files for mlir target ${mlir_target}")
+    message(FATAL_ERROR "MLIR files not specified mlir target ${mlir_target}.")
   endif()
 
   if(NOT ARG_OUTPUT_SV)  
-    message(FATAL_ERROR "Could not find any sv files for mlir target ${mlir_target}")
+    message(FATAL_ERROR "OUTPUT_SV files not specified for mlir target ${mlir_target}.")
   endif()
 
   cmake_path (GET ARG_MLIR STEM LAST_ONLY mlir_name)
@@ -88,16 +88,19 @@ function (add_sv_target name)
   endforeach()
 
   add_custom_command(
-    OUTPUT ${ABS_OUTPUT_SV}
+    OUTPUT ${sv_dir}/run.log
     DEPENDS ${mlir_hw_path} circt 
-    COMMAND ${circt_opt} -export-split-verilog='dir-name=${sv_dir}' ${mlir_hw_path} >/dev/null
+    COMMAND ${circt_opt} -export-split-verilog='dir-name=${sv_dir}' ${mlir_hw_path} >${sv_dir}/run.log
   )
 
   add_custom_target(
     ${name}
-    DEPENDS ${ABS_OUTPUT_SV}
+    DEPENDS ${sv_dir}/run.log
   )
+ 
   set_target_properties(${name}  PROPERTIES OUTPUT_FILES ${ABS_OUTPUT_SV} )
+  set_target_properties(${name}  PROPERTIES OUTPUT_SV_DIR ${sv_dir} )
+  set_target_properties(${name}  PROPERTIES TARGET_TYPE "sv_target" )
 endfunction()
 
 function (add_vivado_project_target name)
@@ -133,12 +136,19 @@ function (add_vivado_project_target name)
     list(APPEND SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${include_file})
   endforeach()
 
+
   foreach( target ${ARG_DEPENDENCE})
-    get_target_property(OUTPUT_FILES ${target} OUTPUT_FILES)
-    if(NOT OUTPUT_FILES)  
-      message(FATAL_ERROR "Could not find any sv or xci files output or mlir target}")
+    get_target_property(TARGET_TYPE ${target} TARGET_TYPE)
+    if(${TARGET_TYPE} MATCHES "sv_target") 
+      get_target_property(OUTPUT_SV_DIR ${target} OUTPUT_SV_DIR)
+      set (HIR_TARGET ${target})
+    else()
+      get_target_property(OUTPUT_FILES ${target} OUTPUT_FILES)
+      if(NOT OUTPUT_FILES)  
+        message(FATAL_ERROR "Could not find any sv or xci files output or mlir target}")
+      endif()
+      list(APPEND SRC_FILES ${OUTPUT_FILES})
     endif()
-    list(APPEND SRC_FILES ${OUTPUT_FILES})
   endforeach()
 
   set(SIM_FILES "")
@@ -159,8 +169,8 @@ function (add_vivado_project_target name)
   set (logfile ${CMAKE_CURRENT_BINARY_DIR}/${name}.log)
   add_custom_command(
     OUTPUT ${vivado_xpr} ${logfile} 
-    DEPENDS  ${VIVADO} ${gen_hir_design_tcl} ${constraint_file} ${SRC_FILES} ${hls_zip}
-    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${gen_hir_design_tcl} -tclargs ${part_name} ${constraint_file} ${vivado_dir} ${ARG_TOP_MODULE} ${hls_dir} ${ARG_HLS_MODULE} ${SRC_FILES} -sim ${SIM_FILES}> ${logfile}
+    DEPENDS  ${VIVADO} ${gen_hir_design_tcl} ${constraint_file} ${SRC_FILES} ${hls_zip} ${HIR_TARGET}
+    COMMAND ${VIVADO} -nolog -nojournal -mode batch -source ${gen_hir_design_tcl} -tclargs ${part_name} ${constraint_file} ${vivado_dir} ${ARG_TOP_MODULE} ${hls_dir} ${ARG_HLS_MODULE} ${SRC_FILES} -sv_dir ${OUTPUT_SV_DIR} -sim ${SIM_FILES}> ${logfile}
   )
 
   add_custom_target(
