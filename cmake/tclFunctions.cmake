@@ -1,6 +1,12 @@
 function (add_circt_project part_name rel_constraint_file rel_circt_path)
-  find_program(VIVADO vivado REQUIRED)
-  find_program(VITIS_HLS vitis_hls REQUIRED)
+  #Find Vivado.
+  find_program(VIVADO vivado)
+  if(VIVADO)
+      find_program(VITIS_HLS vitis_hls REQUIRED)
+  else()
+      message(STATUS "Vivado not found.")
+  endif()
+
   set (circt_path ${CMAKE_CURRENT_SOURCE_DIR}/${rel_circt_path})
   set(circt_build_path ${circt_path}/build)
   add_custom_target(
@@ -12,7 +18,73 @@ function (add_circt_project part_name rel_constraint_file rel_circt_path)
   set_property(GLOBAL PROPERTY circt_opt_path ${circt_build_path}/bin/circt-opt)
 endfunction()
 
+function (add_sv_target name)
+  cmake_parse_arguments(ARG "" "MLIR"
+                          "OUTPUT_SV" ${ARGN} )
+  if(NOT ARG_MLIR)  
+    message(FATAL_ERROR "MLIR files not specified mlir target ${mlir_target}.")
+  endif()
+
+  if(NOT ARG_OUTPUT_SV)  
+    message(FATAL_ERROR "OUTPUT_SV files not specified for mlir target ${mlir_target}.")
+  endif()
+
+  cmake_path (GET ARG_MLIR STEM LAST_ONLY mlir_name)
+  cmake_path (GET ARG_MLIR PARENT_PATH rel_mlir_dir)
+  set (OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir})
+  set (mlir_path ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_MLIR})
+  set (hir_path ${OUTPUT_DIR}/${mlir_name}.hir.mlir)
+  set (hir_opt_path ${OUTPUT_DIR}/${mlir_name}_opt.hir.mlir)
+  set (hir_simplified_path ${OUTPUT_DIR}/${mlir_name}_simplified.hir.mlir)
+  set (mlir_hw_path ${OUTPUT_DIR}/${mlir_name}.hw.mlir)
+  set (sv_dir ${OUTPUT_DIR}/SystemVerilog)
+  get_property(circt_opt GLOBAL PROPERTY circt_opt_path)
+  
+  message (STATUS "Generating MLIR files in ${OUTPUT_DIR}")
+  file(MAKE_DIRECTORY ${OUTPUT_DIR})
+  file(MAKE_DIRECTORY ${sv_dir})
+
+  execute_process(
+    COMMAND ${circt_opt} -affine-to-hir ${mlir_path} 
+    OUTPUT_FILE ${hir_path}
+  )
+
+  execute_process(
+    COMMAND ${circt_opt} -hir-opt ${hir_path} 
+    OUTPUT_FILE ${hir_opt_path}
+  )
+
+  execute_process(
+    COMMAND ${circt_opt} -hir-simplify ${hir_opt_path} 
+    OUTPUT_FILE ${hir_simplified_path}
+  )
+
+  execute_process(
+    COMMAND ${circt_opt} -hir-to-hw ${hir_simplified_path} 
+    OUTPUT_FILE ${mlir_hw_path}
+  )
+  set (dir_name -export-split-verilog='dir-name=${sv_dir}')
+  execute_process(
+    COMMAND bash "-c" "${circt_opt} ${dir_name} ${mlir_hw_path}"
+    OUTPUT_FILE ${sv_dir}/run.log
+    COMMAND_ECHO STDOUT
+  )
+
+  add_custom_target(
+    ${name}
+    DEPENDS ${sv_dir}/run.log
+  )
+ 
+  set_target_properties(${name}  PROPERTIES OUTPUT_SV_DIR ${sv_dir} )
+  set_target_properties(${name}  PROPERTIES TARGET_TYPE "sv_target" )
+endfunction()
+
+
 function(add_vivado_ip_target name rel_ip_path)
+  if(NOT VIVADO)
+    message(STATUS "Not generating target ${name}")
+    return()
+  endif()
   set (ip_path ${CMAKE_CURRENT_SOURCE_DIR}/${rel_ip_path})
   cmake_path (GET ip_path STEM LAST_ONLY ip_name)
   message (STATUS ${ip_name})
@@ -37,73 +109,12 @@ function(add_vivado_ip_target name rel_ip_path)
   set_target_properties(${name}  PROPERTIES OUTPUT_FILES ${xci_path} )
 endfunction()
 
-function (add_sv_target name)
-  cmake_parse_arguments(ARG "" "MLIR"
-                          "OUTPUT_SV" ${ARGN} )
-  if(NOT ARG_MLIR)  
-    message(FATAL_ERROR "MLIR files not specified mlir target ${mlir_target}.")
-  endif()
-
-  if(NOT ARG_OUTPUT_SV)  
-    message(FATAL_ERROR "OUTPUT_SV files not specified for mlir target ${mlir_target}.")
-  endif()
-
-  cmake_path (GET ARG_MLIR STEM LAST_ONLY mlir_name)
-  cmake_path (GET ARG_MLIR PARENT_PATH rel_mlir_dir)
-  set (mlir_path ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_MLIR})
-  set (hir_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}.hir.mlir)
-  set (hir_opt_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}_opt.hir.mlir)
-  set (hir_simplified_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}_simplified.hir.mlir)
-  set (mlir_hw_path ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir}/${mlir_name}.hw.mlir)
-  set (sv_dir ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir})
-  get_property(circt_opt GLOBAL PROPERTY circt_opt_path)
-
-  add_custom_command(
-    OUTPUT ${hir_path}
-    DEPENDS ${mlir_path} circt 
-    COMMAND ${circt_opt} -affine-to-hir ${mlir_path} > ${hir_path}
-  )
-
-  add_custom_command(
-    OUTPUT ${hir_opt_path}
-    DEPENDS ${hir_path} circt 
-    COMMAND ${circt_opt} -hir-opt ${hir_path} > ${hir_opt_path}
-  )
-
-  add_custom_command(
-    OUTPUT ${hir_simplified_path}
-    DEPENDS ${hir_opt_path} circt 
-    COMMAND ${circt_opt} -hir-simplify ${hir_opt_path} > ${hir_simplified_path}
-  )
-
-  add_custom_command(
-    OUTPUT ${mlir_hw_path}
-    DEPENDS ${hir_simplified_path} circt 
-    COMMAND ${circt_opt} -hir-to-hw ${hir_simplified_path} > ${mlir_hw_path}
-  )
-
-  set(ABS_OUTPUT_SV "")
-  foreach(rel_path ${ARG_OUTPUT_SV})
-    list(APPEND ABS_OUTPUT_SV ${CMAKE_CURRENT_BINARY_DIR}/${rel_path})
-  endforeach()
-
-  add_custom_command(
-    OUTPUT ${sv_dir}/run.log
-    DEPENDS ${mlir_hw_path} circt 
-    COMMAND ${circt_opt} -export-split-verilog='dir-name=${sv_dir}' ${mlir_hw_path} >${sv_dir}/run.log
-  )
-
-  add_custom_target(
-    ${name}
-    DEPENDS ${sv_dir}/run.log
-  )
- 
-  set_target_properties(${name}  PROPERTIES OUTPUT_FILES ${ABS_OUTPUT_SV} )
-  set_target_properties(${name}  PROPERTIES OUTPUT_SV_DIR ${sv_dir} )
-  set_target_properties(${name}  PROPERTIES TARGET_TYPE "sv_target" )
-endfunction()
-
 function (add_vivado_project_target name)
+  if(NOT VIVADO)
+    message (STATUS "Not generating target ${name}")
+    return()
+  endif()
+
   cmake_parse_arguments(ARG "" "TOP_MODULE;HLS_MODULE;HLS_FILE"
                           "DEPENDENCE;INCLUDES;SIM_FILES" ${ARGN} )
 
@@ -177,4 +188,55 @@ function (add_vivado_project_target name)
     ${name}
     DEPENDS ${vivado_xpr} 
   )
+endfunction()
+
+function (add_verilator_target name)
+#Find Verilator.
+ find_package(verilator HINTS $ENV{VERILATOR_ROOT})
+  if(verilator_FOUND)
+    message("Verilator found.")
+  else()
+    message("Verilator not found.")
+    return()
+  endif() 
+
+
+cmake_parse_arguments(ARG "" "TOP_MODULE;SV_TARGET"
+                          "TESTBENCH" ${ARGN} )
+
+  if(NOT ARG_TOP_MODULE)  
+    message(FATAL_ERROR "Must specify TOP_MODULE.")
+  endif()
+
+  if(NOT ARG_TESTBENCH)  
+    message(FATAL_ERROR "Must specify TESTBENCH.")
+  endif()
+
+  if(NOT ARG_SV_TARGET)  
+    message(FATAL_ERROR "Must specify SV_TARGET.")
+  endif()
+
+
+  set(C_TB_FILES "")
+  foreach( rel_path ${ARG_TESTBENCH})
+    list(APPEND C_TB_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${rel_path})
+  endforeach()
+
+message (STATUS "${C_TB_FILES}")
+get_target_property(OUTPUT_SV_DIR ${ARG_SV_TARGET} OUTPUT_SV_DIR)
+file(GLOB SV_FILES "${OUTPUT_SV_DIR}/*.sv")  
+list(APPEND SV_FILES ${CMAKE_CURRENT_SOURCE_DIR}/../../includes/helper.sv)
+message (STATUS "${SV_FILES}")
+add_executable(${name} ${C_TB_FILES})
+verilate(${name} SOURCES ${SV_FILES} TOP_MODULE ${ARG_TOP_MODULE} PREFIX V${ARG_TOP_MODULE} TRACE VERILATOR_ARGS "--debug")
+#add_custom_command(
+#    OUTPUT V${ARG_TOP_MODULE}  
+#    DEPENDS  ${VERILATOR} ${ARG_SV_TARGET} 
+#    COMMAND ${VERILATOR} --cc ${OUTPUT_SV_DIR}/*.sv ${CMAKE_CURRENT_SOURCE_DIR}/../../includes/helper.sv --top ${ARG_TOP_MODULE} --Mdir ${CMAKE_CURRENT_BINARY_DIR}/build_verilator ${C_TB_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/../common/verilator/helper.c --trace --exe  --build>verilator.log
+#  )
+#
+#add_custom_target(
+#    ${name}
+#    DEPENDS V${ARG_TOP_MODULE} 
+#  )
 endfunction()

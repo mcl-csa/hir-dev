@@ -6,6 +6,20 @@ add_sv_target(gesummv
     src/mlir/gesummv_hir.sv
 )
 
+add_verilator_target(gesummv_verilated
+    TOP_MODULE
+    gesummv_hir
+    
+    TESTBENCH
+    testbench/main.cpp
+    src/c/gesummv.cpp
+    ../common/verilator/helper.cpp
+    
+    SV_TARGET 
+    gesummv
+
+)
+
 add_vivado_project_target(gesummv_prj
     TOP_MODULE
     gesummv_hir

@@ -1,8 +1,8 @@
-int add_i32(int a, int b);
-int mul_i32(int a, int b);
 #pragma HLS extern_func variable = add_i32 latency = 0
 #pragma HLS extern_func variable = mul_i32 latency = 1
-
+extern "C" {
+int add_i32(int a, int b);
+int mul_i32(int a, int b);
 void gesummv_hir(int alpha, int beta, int tmp[8], int A[8][8], int B[8][8],
                  int X[8], int Y[8]) {
 #pragma HLS INTERFACE port = tmp storage_type = ram_1p wr_latency = 1
@@ -29,4 +29,5 @@ void gesummv_hir(int alpha, int beta, int tmp[8], int A[8][8], int B[8][8],
     Y[i] = add_i32(mul_i32(alpha, tmp_reg[0]), mul_i32(beta, y_i));
   }
 #pragma endscop
+}
 }

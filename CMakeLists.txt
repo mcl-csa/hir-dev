@@ -31,7 +31,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 #-------------------------------------------------------------------------------
 # Project setup and globals
 #-------------------------------------------------------------------------------
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 project(hir)
 
 #include helper functions.
