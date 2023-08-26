@@ -51,7 +51,6 @@ int main(int argc, char **argv, char **env) {
   int Y[8];
   gesummv_hir(1, 2, tmp, tb.A.getDataPtr<int(*)[8]>(),
               tb.B.getDataPtr<int(*)[8]>(), tb.X.getDataPtr<int *>(), Y);
-
   tb.TMP.assertEq("tmp", tmp);
   tb.Y.assertEq("Y", Y);
   printf("TEST PASS\n");

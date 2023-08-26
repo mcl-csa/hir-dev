@@ -7,17 +7,11 @@ add_sv_target(gesummv
 )
 
 add_verilator_target(gesummv_verilated
-    TOP_MODULE
-    gesummv_hir
-    
-    TESTBENCH
-    testbench/main.cpp
-    src/c/gesummv.cpp
-    ../common/verilator/helper.cpp
-    
+    VERILATOR_PROJECT_DIR
+    testbench
+
     SV_TARGET 
     gesummv
-
 )
 
 add_vivado_project_target(gesummv_prj

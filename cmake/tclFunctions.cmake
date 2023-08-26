@@ -1,3 +1,4 @@
+include(ExternalProject)
 function (add_circt_project part_name rel_constraint_file rel_circt_path)
   #Find Vivado.
   find_program(VIVADO vivado)
@@ -191,52 +192,39 @@ function (add_vivado_project_target name)
 endfunction()
 
 function (add_verilator_target name)
-#Find Verilator.
- find_package(verilator HINTS $ENV{VERILATOR_ROOT})
-  if(verilator_FOUND)
-    message("Verilator found.")
-  else()
-    message("Verilator not found.")
-    return()
-  endif() 
 
+cmake_parse_arguments(ARG "" "SV_TARGET;VERILATOR_PROJECT_DIR"
+                          "" ${ARGN} )
 
-cmake_parse_arguments(ARG "" "TOP_MODULE;SV_TARGET"
-                          "TESTBENCH" ${ARGN} )
-
-  if(NOT ARG_TOP_MODULE)  
-    message(FATAL_ERROR "Must specify TOP_MODULE.")
-  endif()
-
-  if(NOT ARG_TESTBENCH)  
-    message(FATAL_ERROR "Must specify TESTBENCH.")
+  if(NOT ARG_VERILATOR_PROJECT_DIR)  
+    message(FATAL_ERROR "Must specify VERILATOR_PROJECT_DIR.")
   endif()
 
   if(NOT ARG_SV_TARGET)  
     message(FATAL_ERROR "Must specify SV_TARGET.")
   endif()
+  set(VERILATOR_FUNCTIONS ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/verilatorFunctions.cmake)
 
+  
+  #Find Verilator.
+  find_package(verilator)
+  if(NOT verilator_FOUND)
+    message("Verilator not found. Skipping target ${name}.")
+    return()
+  endif() 
 
-  set(C_TB_FILES "")
-  foreach( rel_path ${ARG_TESTBENCH})
-    list(APPEND C_TB_FILES ${CMAKE_CURRENT_SOURCE_DIR}/${rel_path})
-  endforeach()
-
-message (STATUS "${C_TB_FILES}")
-get_target_property(OUTPUT_SV_DIR ${ARG_SV_TARGET} OUTPUT_SV_DIR)
-file(GLOB SV_FILES "${OUTPUT_SV_DIR}/*.sv")  
-list(APPEND SV_FILES ${CMAKE_CURRENT_SOURCE_DIR}/../../includes/helper.sv)
-message (STATUS "${SV_FILES}")
-add_executable(${name} ${C_TB_FILES})
-verilate(${name} SOURCES ${SV_FILES} TOP_MODULE ${ARG_TOP_MODULE} PREFIX V${ARG_TOP_MODULE} TRACE VERILATOR_ARGS "--debug")
-#add_custom_command(
-#    OUTPUT V${ARG_TOP_MODULE}  
-#    DEPENDS  ${VERILATOR} ${ARG_SV_TARGET} 
-#    COMMAND ${VERILATOR} --cc ${OUTPUT_SV_DIR}/*.sv ${CMAKE_CURRENT_SOURCE_DIR}/../../includes/helper.sv --top ${ARG_TOP_MODULE} --Mdir ${CMAKE_CURRENT_BINARY_DIR}/build_verilator ${C_TB_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/../common/verilator/helper.c --trace --exe  --build>verilator.log
-#  )
-#
-#add_custom_target(
-#    ${name}
-#    DEPENDS V${ARG_TOP_MODULE} 
-#  )
+  get_target_property(OUTPUT_SV_DIR ${ARG_SV_TARGET} OUTPUT_SV_DIR)
+  ExternalProject_Add(${name} 
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_VERILATOR_PROJECT_DIR}
+  DEPENDS ${ARG_SV_TARGET}
+  BUILD_ALWAYS ON
+  CMAKE_ARGS 
+            -DPROJECT_NAME=${name}
+            -DVERILATOR_FUNCTIONS=${VERILATOR_FUNCTIONS}
+            -DOUTPUT_SV_DIR=${OUTPUT_SV_DIR}
+            -DCMAKE_BUILD_TYPE=Debug
+  INSTALL_COMMAND ""
+  LOG_CONFIGURE ON
+  LOG_OUTPUT_ON_FAILURE ON
+  )
 endfunction()
