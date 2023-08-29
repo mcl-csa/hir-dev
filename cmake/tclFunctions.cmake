@@ -46,13 +46,15 @@ function (add_sv_target name)
   file(MAKE_DIRECTORY ${OUTPUT_DIR})
   file(MAKE_DIRECTORY ${sv_dir})
 
+  #A single command allows us to get the precise source map from the sv file to the mlir_file.
   add_custom_command(
     DEPENDS  ${circt} ${mlir_file} 
-    COMMAND ${circt_opt} -affine-to-hir ${mlir_file} > ${hir_file}
-    COMMAND ${circt_opt} -hir-opt ${hir_file}  > ${hir_opt_file}
-    COMMAND ${circt_opt} -hir-simplify ${hir_opt_file} > ${hir_simplified_file}
-    COMMAND ${circt_opt} -hir-to-hw ${hir_simplified_file} > ${hir_hw_file}
-    COMMAND ${circt_opt} -export-split-verilog='dir-name=${sv_dir}' ${hir_hw_file} > ${log_file}
+    COMMAND ${circt_opt} -affine-to-hir -hir-opt -hir-simplify -hir-to-hw -export-split-verilog='dir-name=${sv_dir}' ${mlir_file} > ${log_file}
+    #COMMAND ${circt_opt} -affine-to-hir ${mlir_file} > ${hir_file}
+    #COMMAND ${circt_opt} -hir-opt ${hir_file}  > ${hir_opt_file}
+    #COMMAND ${circt_opt} -hir-simplify ${hir_opt_file} > ${hir_simplified_file}
+    #COMMAND ${circt_opt} -hir-to-hw ${hir_simplified_file} > ${hir_hw_file}
+    #COMMAND ${circt_opt} -export-split-verilog='dir-name=${sv_dir}' ${hir_hw_file} > ${log_file}
     OUTPUT ${log_file}
   )
 
