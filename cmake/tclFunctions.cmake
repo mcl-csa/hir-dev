@@ -33,47 +33,32 @@ function (add_sv_target name)
   cmake_path (GET ARG_MLIR STEM LAST_ONLY mlir_name)
   cmake_path (GET ARG_MLIR PARENT_PATH rel_mlir_dir)
   set (OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/${rel_mlir_dir})
-  set (mlir_path ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_MLIR})
-  set (hir_path ${OUTPUT_DIR}/${mlir_name}.hir.mlir)
-  set (hir_opt_path ${OUTPUT_DIR}/${mlir_name}_opt.hir.mlir)
-  set (hir_simplified_path ${OUTPUT_DIR}/${mlir_name}_simplified.hir.mlir)
-  set (mlir_hw_path ${OUTPUT_DIR}/${mlir_name}.hw.mlir)
+  set (mlir_file ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_MLIR})
+  set (hir_file ${OUTPUT_DIR}/${mlir_name}.hir.mlir)
+  set (hir_opt_file ${OUTPUT_DIR}/${mlir_name}_opt.hir.mlir)
+  set (hir_simplified_file ${OUTPUT_DIR}/${mlir_name}_simplified.hir.mlir)
+  set (hir_hw_file ${OUTPUT_DIR}/${mlir_name}.hw.mlir)
   set (sv_dir ${OUTPUT_DIR}/SystemVerilog)
+  set (log_file ${sv_dir}/run.log)
   get_property(circt_opt GLOBAL PROPERTY circt_opt_path)
   
   message (STATUS "Generating MLIR files in ${OUTPUT_DIR}")
   file(MAKE_DIRECTORY ${OUTPUT_DIR})
   file(MAKE_DIRECTORY ${sv_dir})
 
-  execute_process(
-    COMMAND ${circt_opt} -affine-to-hir ${mlir_path} 
-    OUTPUT_FILE ${hir_path}
-  )
-
-  execute_process(
-    COMMAND ${circt_opt} -hir-opt ${hir_path} 
-    OUTPUT_FILE ${hir_opt_path}
-  )
-
-  execute_process(
-    COMMAND ${circt_opt} -hir-simplify ${hir_opt_path} 
-    OUTPUT_FILE ${hir_simplified_path}
-  )
-
-  execute_process(
-    COMMAND ${circt_opt} -hir-to-hw ${hir_simplified_path} 
-    OUTPUT_FILE ${mlir_hw_path}
-  )
-  set (dir_name -export-split-verilog='dir-name=${sv_dir}')
-  execute_process(
-    COMMAND bash "-c" "${circt_opt} ${dir_name} ${mlir_hw_path}"
-    OUTPUT_FILE ${sv_dir}/run.log
-    COMMAND_ECHO STDOUT
+  add_custom_command(
+    DEPENDS  ${circt} ${mlir_file} 
+    COMMAND ${circt_opt} -affine-to-hir ${mlir_file} > ${hir_file}
+    COMMAND ${circt_opt} -hir-opt ${hir_file}  > ${hir_opt_file}
+    COMMAND ${circt_opt} -hir-simplify ${hir_opt_file} > ${hir_simplified_file}
+    COMMAND ${circt_opt} -hir-to-hw ${hir_simplified_file} > ${hir_hw_file}
+    COMMAND ${circt_opt} -export-split-verilog='dir-name=${sv_dir}' ${hir_hw_file} > ${log_file}
+    OUTPUT ${log_file}
   )
 
   add_custom_target(
     ${name}
-    DEPENDS ${sv_dir}/run.log
+    DEPENDS ${log_file}
   )
  
   set_target_properties(${name}  PROPERTIES OUTPUT_SV_DIR ${sv_dir} )
@@ -192,7 +177,6 @@ function (add_vivado_project_target name)
 endfunction()
 
 function (add_verilator_target name)
-
 cmake_parse_arguments(ARG "" "SV_TARGET;VERILATOR_PROJECT_DIR"
                           "" ${ARGN} )
 
