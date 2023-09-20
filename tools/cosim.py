@@ -1,45 +1,74 @@
-from mlir.ir import Context, InsertionPoint, IntegerAttr, IntegerType, StringAttr, Location, Module, FunctionType
-from mlir.dialects import arith, func
-import mlir
-breakpoint()
+# executionengine.py
+from numpy.ctypeslib import ndpointer
+import numpy
+import ctypes
+import gc
+import sys
+import os
+import tempfile
+from mlir.ir import *
+from mlir.passmanager import *
+from mlir.execution_engine import *
+from mlir.runtime import *
 
 
-def walk(operation):
-    operationsWithRegion = [operation]
-    while (len(operationsWithRegion) > 0):
-        walkTopOperation(operationsWithRegion)
+def lowerToLLVM(module):
+    pm = PassManager.parse(
+        "lower-affine,convert-scf-to-cf,convert-memref-to-llvm,convert-func-to-llvm,reconcile-unrealized-casts"
+    )
+    pm.run(module)
+    print(module)
+    return module
 
 
-def walkTopOperation(operationsWithRegion):
-    operation = operationsWithRegion[0]
-    operationsWithRegion.pop(0)
+def testMemrefAdd():
+    with Context():
+        with open('gesummv/cpu-module.mlir', 'r') as f:
+            module = Module.parse(f.read())
+        arg0 = ctypes.c_int32*1
+        arg1 = ctypes.c_int32*1
+        arg2 = np.ones((8), np.int32)
+        arg3 = np.ones((8, 8), np.int32)
+        arg4 = np.ones((8, 8), np.int32)
+        arg5 = np.ones((8), np.int32)
+        arg6 = np.ones((8), np.int32)
+        arg2_memref_ptr = ctypes.pointer(
+            ctypes.pointer(get_ranked_memref_descriptor(arg2)))
+        arg3_memref_ptr = ctypes.pointer(
+            ctypes.pointer(get_ranked_memref_descriptor(arg3)))
+        arg4_memref_ptr = ctypes.pointer(
+            ctypes.pointer(get_ranked_memref_descriptor(arg4)))
+        arg5_memref_ptr = ctypes.pointer(
+            ctypes.pointer(get_ranked_memref_descriptor(arg5)))
+        arg6_memref_ptr = ctypes.pointer(
+            ctypes.pointer(get_ranked_memref_descriptor(arg6)))
 
-    for op in operation.regions[0].blocks[0].operations:
-        if (len(op.regions)):
-            operationsWithRegion.append(op)
-        if (isinstance(op, affine.LoadOp)):
-            print(op)
-
-
-with Context() as ctx, Location.unknown():
-    # module = Module.create()
-    with open("./gesummv.mlir", 'r') as f:
-        s = f.read()
-    module = Module.parse(s)
-    i32 = IntegerType.get_signless(32)
-    breakpoint()
-    with InsertionPoint(module.body):
-        recorder = func.FuncOp(name="record_int",
-                               type=FunctionType.get(
-                                   inputs=[i32, i32],
-                                   results=[]), visibility="nested")
-
-        @func.FuncOp.from_py_func()
-        def entry():
-            value = arith.ConstantOp(IntegerType.get_signless(32), 5)
-            width = arith.ConstantOp(IntegerType.get_signless(32), 32)
-            func.CallOp(recorder, [value, width])
-            return
+        execution_engine = ExecutionEngine(lowerToLLVM(module))
+        execution_engine.invoke("gesummv_hir", arg0, arg1,
+                                arg2_memref_ptr, arg3_memref_ptr, arg4_memref_ptr, arg5_memref_ptr, arg6_memref_ptr)
 
 
-print(module)
+testMemrefAdd()
+
+
+# lib = ctypes.cdll.LoadLibrary("./gesummv/cpu.so")
+# fun = lib.gesummv_hir
+# fun.restype = None
+# fun.argtypes = [
+#    ctypes.c_int,
+#    ctypes.c_int,
+#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
+#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS")]
+#
+# a = numpy.ones((8), numpy.int32)
+# b = numpy.ones((8, 8), numpy.int32)
+#
+# for i in range(8):
+#    a[i] = i
+#    for j in range(8):
+#        b[i][j] = i*8+j
+#
+# fun(0, 2, a, b, b, a, a)

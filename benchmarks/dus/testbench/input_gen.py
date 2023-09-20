@@ -18,7 +18,8 @@ cut = np.ones([R, C])
 with open('img.mem', 'w') as f, open('img.txt', 'w') as f2:
     for i in range(R):
         for j in range(C):
-            v = float(np_frame[i, j])
+            #v = float(np_frame[i, j])
+            v = float(j)
             cut[i, j] = v
             f.write(floatToBits(v))
             f.write("\n")
