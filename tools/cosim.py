@@ -1,74 +1,62 @@
 # executionengine.py
-from numpy.ctypeslib import ndpointer
-import numpy
-import ctypes
-import gc
-import sys
-import os
-import tempfile
-from mlir.ir import *
-from mlir.passmanager import *
-from mlir.execution_engine import *
+import sys  # noqa
+sys.path.append("../circt/build/tools/mlir/python_packages/mlir_core")  # noqa
+
 from mlir.runtime import *
+from mlir.execution_engine import *
+from mlir.passmanager import *
+from mlir.ir import *
+import ctypes
+import numpy as np
 
 
 def lowerToLLVM(module):
     pm = PassManager.parse(
-        "lower-affine,convert-scf-to-cf,convert-memref-to-llvm,convert-func-to-llvm,reconcile-unrealized-casts"
-    )
-    pm.run(module)
-    print(module)
+        "builtin.module(lower-affine,convert-scf-to-cf,convert-to-llvm)")
+    pm.run(module.operation)
     return module
 
-
-def testMemrefAdd():
-    with Context():
-        with open('gesummv/cpu-module.mlir', 'r') as f:
-            module = Module.parse(f.read())
-        arg0 = ctypes.c_int32*1
-        arg1 = ctypes.c_int32*1
-        arg2 = np.ones((8), np.int32)
-        arg3 = np.ones((8, 8), np.int32)
-        arg4 = np.ones((8, 8), np.int32)
-        arg5 = np.ones((8), np.int32)
-        arg6 = np.ones((8), np.int32)
-        arg2_memref_ptr = ctypes.pointer(
-            ctypes.pointer(get_ranked_memref_descriptor(arg2)))
-        arg3_memref_ptr = ctypes.pointer(
-            ctypes.pointer(get_ranked_memref_descriptor(arg3)))
-        arg4_memref_ptr = ctypes.pointer(
-            ctypes.pointer(get_ranked_memref_descriptor(arg4)))
-        arg5_memref_ptr = ctypes.pointer(
-            ctypes.pointer(get_ranked_memref_descriptor(arg5)))
-        arg6_memref_ptr = ctypes.pointer(
-            ctypes.pointer(get_ranked_memref_descriptor(arg6)))
-
-        execution_engine = ExecutionEngine(lowerToLLVM(module))
-        execution_engine.invoke("gesummv_hir", arg0, arg1,
-                                arg2_memref_ptr, arg3_memref_ptr, arg4_memref_ptr, arg5_memref_ptr, arg6_memref_ptr)
+# Define a callback to print values.
 
 
-testMemrefAdd()
+@ctypes.CFUNCTYPE(None, ctypes.c_int32)
+def record(a):
+    print(a)
 
 
-# lib = ctypes.cdll.LoadLibrary("./gesummv/cpu.so")
-# fun = lib.gesummv_hir
-# fun.restype = None
-# fun.argtypes = [
-#    ctypes.c_int,
-#    ctypes.c_int,
-#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
-#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
-#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
-#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS"),
-#    ndpointer(ctypes.c_int, flags="C_CONTIGUOUS")]
-#
-# a = numpy.ones((8), numpy.int32)
-# b = numpy.ones((8, 8), numpy.int32)
-#
-# for i in range(8):
-#    a[i] = i
-#    for j in range(8):
-#        b[i][j] = i*8+j
-#
-# fun(0, 2, a, b, b, a, a)
+class CpuRunner:
+    def __init__(self, mlirFile):
+        with Context(), open(mlirFile, 'r') as f:
+            self.module = Module.parse(f.read())
+            self.module = lowerToLLVM(self.module)
+
+    def getCArgs(self, args):
+        c_args = []
+        c_int_p = ctypes.c_int64*1
+        for arg in args:
+            if (isinstance(arg, int)):
+                c_args.append(c_int_p(arg))
+            elif (isinstance(arg, np.ndarray)):
+                c_args.append(ctypes.pointer(
+                    ctypes.pointer(get_ranked_memref_descriptor((arg)))))
+        return c_args
+
+    def run(self, *args):
+        c_args = self.getCArgs(args)
+        execution_engine = ExecutionEngine(self.module)
+        execution_engine.register_runtime(
+            "record", record)
+        execution_engine.invoke("gesummv_hir", *c_args)
+
+
+arg0 = 1
+arg1 = 2
+arg2 = np.ones((8), np.int32)
+arg3 = np.ones((8, 8), np.int32)
+arg4 = np.ones((8, 8), np.int32)
+arg5 = np.ones((8), np.int32)
+arg6 = np.zeros((8), np.int32)
+
+cpuRunner = CpuRunner('build/gesummv/cpu-module.mlir')
+cpuRunner.run(arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+print(arg6)
