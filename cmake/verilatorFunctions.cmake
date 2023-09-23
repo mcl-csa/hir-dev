@@ -42,5 +42,6 @@ function (add_verilator_project name)
   target_compile_options(${name} PRIVATE -g -O0)
 
   target_link_options(${name} PRIVATE -g)
-  verilate(${name} SOURCES ${GENERATED_SV_FILES} ${EXTRA_SV_FILES} TOP_MODULE ${ARG_TOP_MODULE} PREFIX V${ARG_TOP_MODULE} TRACE )
+  verilate(${name} SOURCES ${GENERATED_SV_FILES} ${EXTRA_SV_FILES} TOP_MODULE ${ARG_TOP_MODULE} PREFIX V${ARG_TOP_MODULE} TRACE VERILATOR_ARGS --vpi)
+
 endfunction()

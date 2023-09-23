@@ -45,14 +45,14 @@ public:
 int main(int argc, char **argv, char **env) {
   int tmp[8];
   int Y[8];
-  return 0;
-  gesummv_tb tb(std::string(argv[1]) + std::string("/data/A.txt"),
-                std::string(argv[1]) + std::string("/data/B.txt"),
-                std::string(argv[1]) + std::string("/data/X.txt"));
+  gesummv_tb tb(std::string(argv[1]) + std::string("/A.txt"),
+                std::string(argv[1]) + std::string("/B.txt"),
+                std::string(argv[1]) + std::string("/X.txt"));
   tb.run(1000);
   gesummv_hir(1, 2, tmp, tb.A.getDataPtr<int(*)[8]>(),
               tb.B.getDataPtr<int(*)[8]>(), tb.X.getDataPtr<int *>(), Y);
   tb.TMP.assertEq("tmp", tmp);
   tb.Y.assertEq("Y", Y);
   printf("TEST PASS\n");
+  return 0;
 }

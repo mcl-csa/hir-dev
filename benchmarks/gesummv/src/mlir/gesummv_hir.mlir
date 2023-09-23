@@ -26,6 +26,7 @@ attributes {hwAccel,argNames=["alpha","beta","tmp","A","B","X","Y"]} {
       %9 = affine.load %arg5[%arg8] {result_delays=[1]} : memref<8xi32>
       %10 = arith.muli %8, %9  {result_delays=[1], hir_function=@mul_i32} : i32
       %11 = affine.load %arg4[%arg7, %arg8] {result_delays=[1]} : memref<8x8xi32>
+      hir.probe %11 name "tmp0":i32
       %12 = arith.muli %11, %9  {result_delays=[1], hir_function=@mul_i32} : i32
       %13 = affine.load %2[0] {result_delays=[0]} : memref<1xi32>
       %14 = arith.addi %13, %10  {result_delays=[0], hir_function=@add_i32} : i32
