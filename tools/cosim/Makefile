@@ -4,7 +4,8 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += $(wildcard ${COSIM_VERILOG_DIR}/*.sv)
+VERILOG_SOURCES = $(wildcard ${COSIM_VERILOG_DIR}/*.sv)
+VERILOG_SOURCES += ${COSIM_VERILOG_LIBS}
 # use VHDL_SOURCES for VHDL files
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file

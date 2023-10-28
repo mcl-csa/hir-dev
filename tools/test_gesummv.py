@@ -1,9 +1,18 @@
 import cosim.simulator as cosim
 import numpy as np
 
+config = {
+    'mlir_file': 'gesummv.mlir',
+    'top_level': 'gesummv_hir',
+    'waveform_file': 'gesummv.vcd',
+    'output_dir': 'build/gesummv',
+    'num_cycles': 1000,
+    'verilog_libs': ['../includes/helper.sv']
+}
 
-@cosim.test(mlir_file='gesummv.mlir', top_level='gesummv_hir', waveform_file='gesummv.wav', output_dir='build/gesummv')
-async def test(dut):
+
+@cosim.test(**config)
+async def gesummv_tb(dut):
     alpha = 1
     beta = 2
     temp = np.ones((8), np.int32)
