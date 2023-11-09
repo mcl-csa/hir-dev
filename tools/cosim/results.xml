@@ -1,6 +1,0 @@
-<testsuites name="results">
-  <testsuite name="all" package="all">
-    <property name="random_seed" value="1698511131" />
-    <testcase name="cocotb_testbench" classname="cocotb_test_runner" file="/Users/kingshuk1000/Git_Clones/hir-dev/tools/cosim/cocotb_test_runner.py" lineno="8" time="2.154895067214966" sim_time_ns="8016.001" ratio_time="3719.9031739211587" />
-  </testsuite>
-</testsuites>

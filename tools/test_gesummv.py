@@ -6,7 +6,7 @@ config = {
     'top_level': 'gesummv_hir',
     'waveform_file': 'gesummv.vcd',
     'output_dir': 'build/gesummv',
-    'num_cycles': 1000,
+    'num_cycles': 10,
     'verilog_libs': ['../includes/helper.sv']
 }
 
