@@ -13,7 +13,7 @@ config = {
 
 @cosim.test(**config)
 async def gesummv_tb(dut):
-    alpha = 1
+    alpha = 15
     beta = 2
     temp = np.ones((8), np.int32)
     A = np.ones((8, 8), np.int32)
