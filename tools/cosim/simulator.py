@@ -29,6 +29,8 @@ def test(**kwargs):
             raise Exception(
                 f"cosim test function '{func.__name__}' must be async.")
 
+        # This is the second call to test in the launched context.
+        # Return function directly.
         if ('COSIM_TESTNAME' in os.environ):
             return func
 
@@ -41,10 +43,6 @@ def test(**kwargs):
         verilog_libs = ':'.join(get_full_path(
             test_module_dir, kwargs['verilog_libs']))
         config_file, verilog_dir = compile_mlir(mlir_file, output_dir)
-        if ('waveform_file' in kwargs):
-            waveform_file = kwargs['waveform_file']
-        else:
-            waveform_file = None
         cocotb_env = os.environ.copy()
         if ('PYTHONPATH' not in cocotb_env):
             raise Exception('''Must set the mlir python bindings directory in PYTHONPATH environment variable. 

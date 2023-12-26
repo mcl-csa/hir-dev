@@ -1,13 +1,13 @@
-import cosim.simulator as cosim
+import simulator as cosim
 import numpy as np
 
 config = {
     'mlir_file': 'gesummv.mlir',
     'top_level': 'gesummv_hir',
     'waveform_file': 'gesummv.vcd',
-    'output_dir': 'build/gesummv',
+    'output_dir': 'build/gesummv_hir',
     'num_cycles': 10,
-    'verilog_libs': ['../includes/helper.sv']
+    'verilog_libs': ['../../includes/helper.sv']
 }
 
 

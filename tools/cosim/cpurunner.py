@@ -1,11 +1,8 @@
-import sys  # noqa
 from mlir.runtime import *
 from mlir.execution_engine import *
 from mlir.passmanager import *
 from mlir.ir import *
 import ctypes
-
-# sys.path.append("../circt/build/tools/mlir/python_packages/mlir_core")  # noqa
 
 
 def lowerToLLVM(module):

@@ -2,6 +2,7 @@
 
 # defaults
 SIM = icarus
+WAVES = 1
 TOPLEVEL_LANG = verilog
 
 VERILOG_SOURCES = $(wildcard ${COSIM_VERILOG_DIR}/*.sv)

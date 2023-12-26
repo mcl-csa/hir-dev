@@ -7,6 +7,82 @@ import math
 from vcd import VCDWriter
 
 
+class PortInterface:
+    def __init__(self, dut, port_config, values):
+        self.dut = dut
+        self.name = port_config['name']
+
+        # convert multi-dim array to single dimension.
+        self.values = values.flatten()
+
+        # Address bus.
+        self.addr_en = f"{self.name}_addr_en"
+        self.addr_data = f"{self.name}_addr_data"
+
+        # Read bus.
+        self.is_rd_port = False
+        if ('rd_latency' in port_config):
+            self.rd_latency = port_config['rd_latency']
+            self.is_rd_port = True
+            self.rd_en = f"{self.name}_rd_en"
+            self.rd_data = f"{self.name}_rd_data"
+
+        # Write bus.
+        self.is_wr_port = False
+        if ('wr_latency' in port_config):
+            self.wr_latency = port_config['wr_latency']
+            self.is_wr_port = True
+            self.wr_en = f"{self.name}_wr_en"
+            self.wr_data = f"{self.name}_wr_data"
+
+    async def run(self,  num_cycles):
+        dut = self.dut
+        rd_queue = [None]*(self.rd_latency)
+        wr_queue = [None]*(self.wr_latency)
+
+        for _ in range(num_cycles):
+            RisingEdge(dut.clk)
+            # Schedule the actions.
+            if (dut[self.addr_en] == 0):
+                continue
+
+            addr = dut[self.addr_data]
+
+            if (self.is_rd_port and dut[self.rd_en] == 1):
+                value = self.values[addr]
+                rd_queue.append(addr)
+            else:
+                rd_queue.append(None)
+
+            if (self.is_wr_port and dut[self.wr_en] == 1):
+                wr_queue.append((addr, dut[self.wr_data]))
+            else:
+                wr_queue.append(None)
+
+            # Perform the actions.
+            # Read-before-write.
+            value = rd_queue.pop(0)
+            if (value):
+                dut[self.rd_data] = value
+
+            wr_req = wr_queue.pop(0)
+            if (wr_req):
+                (addr, data) = wr_req
+                self.values[addr] = data
+
+
+def generate_module_interface(dut, args, arg_configs):
+    tasks = []
+    for value, config in zip(args, arg_configs):
+        if (config['type'] == 'integer'):
+            dut[config['name']] = value
+        if (config['type'] == 'memref'):
+            for port_config in config['ports']:
+                portInterface = PortInterface(dut, port_config, value)
+                tasks.append(portInterface)
+    return tasks
+
+
 class DUTWrapper:
     def __init__(self, dut, config, vcdf):
         self.name = dut._name
@@ -98,14 +174,6 @@ class DUTWrapper:
             await Timer(half_cycle, units="ns")
 
 
-async def generate_module_interface(dut, num_cycles, args, arg_configs):
-    for i in range(num_cycles):
-        RisingEdge(dut.clk)
-        for value, config in zip(args, arg_configs):
-            if (config['type'] == 'integer'):
-                dut[config['name']] = value+i
-
-
 @cocotb.test()
 async def cocotb_testbench(dut):
     """Calls the actual cosim testbench."""
@@ -135,10 +203,12 @@ async def cocotb_testbench(dut):
         vcdf = open(os.environ['COSIM_WAVEFORM_FILE'], 'w')
 
     async def wrapped_dut(*args):
-        nonlocal dut
-        dut = DUTWrapper(dut, config, vcdf)
-        await cocotb.start(dut.run(8, num_cycles))
-        await cocotb.start(generate_module_interface(dut, num_cycles, args, config[toplevel]['args']))
+        wrapped_dut = DUTWrapper(dut, config, vcdf)
+        await cocotb.start(wrapped_dut.run(8, num_cycles))
+        tasks = generate_module_interface(
+            wrapped_dut, args, config[toplevel]['args'])
+        for task in tasks:
+            cocotb.start(task.run(num_cycles))
         await Timer(num_cycles*8+16, units='ns')
 
     await test_func(wrapped_dut)
