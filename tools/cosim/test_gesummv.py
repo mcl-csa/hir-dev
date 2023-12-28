@@ -6,7 +6,7 @@ config = {
     'top_level': 'gesummv_hir',
     'waveform_file': 'gesummv.vcd',
     'output_dir': 'build/gesummv_hir',
-    'num_cycles': 10,
+    'num_cycles': 200,
     'verilog_libs': ['../../includes/helper.sv']
 }
 
@@ -15,9 +15,10 @@ config = {
 async def gesummv_tb(dut):
     alpha = 15
     beta = 2
-    temp = np.ones((8), np.int32)
-    A = np.ones((8, 8), np.int32)
-    B = np.ones((8, 8), np.int32)
-    X = np.ones((8), np.int32)
+    temp = np.arange(stop=8, dtype=np.int32)
+    A = np.reshape(np.arange(stop=64, dtype=np.int32), (8, 8))
+    B = np.reshape(np.arange(stop=64, dtype=np.int32), (8, 8))
+    X = np.arange(stop=8, dtype=np.int32)
     Y = np.zeros((8), np.int32)
     await dut(alpha, beta, temp, A, B, X, Y)
+    print(f'Y={Y}')
