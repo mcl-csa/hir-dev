@@ -3,26 +3,13 @@ import math
 import numpy as np
 
 
-class Tensor:
-    def __init__(self, npTensor):
-        self.npTensor = npTensor
-
-    def __getitem__(self, idx):
-        indices = np.unravel_index(idx, self.npTensor.shape)
-        return self.npTensor[indices]
-
-    def __setitem__(self, idx, value):
-        indices = np.unravel_index(idx, self.npTensor.shape)
-        self.npTensor[indices] = value
-
-
 class PortInterface:
-    def __init__(self, dut, port_config, values):
+    def __init__(self, dut, port_config, tensor):
         self.dut = dut
         self.name = port_config['name']
 
         # convert multi-dim array to single dimension.
-        self.values = Tensor(values)
+        self.tensor = tensor
 
         # Address bus.
         self.addr_en = f"{self.name}_addr_en"
@@ -80,7 +67,7 @@ class PortInterface:
 
                 if (addr != None):
                     try:
-                        self.dut[self.rd_data] = int(self.values[addr.integer])
+                        self.dut[self.rd_data] = int(self.tensor[addr.integer])
                     except:
                         print(
                             f"ERROR: addr('{addr.binstr}') is not an integer.\n\t While reading from port {self.name} at {cycle} cycle.")
@@ -103,7 +90,7 @@ class PortInterface:
                             f"ERROR: data('{data.binstr}') is not an integer.\n\t While writing to port {self.name} at {cycle} cycle.")
                         continue
 
-                    self.values[addrv] = datav
+                    self.tensor[addrv] = datav
 
 
 class DUTWrapper:

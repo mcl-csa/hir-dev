@@ -2,7 +2,7 @@ import simulator as cosim
 import numpy as np
 
 config = {
-    'mlir_file': 'gesummv.mlir',
+    'mlir_file': 'gesummv_hir.mlir',
     'top_level': 'gesummv_hir',
     'waveform_file': 'gesummv.vcd',
     'output_dir': 'build/gesummv_hir',

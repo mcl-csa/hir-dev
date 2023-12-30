@@ -5,7 +5,7 @@ SIM = icarus
 WAVES = 1
 TOPLEVEL_LANG = verilog
 
-VERILOG_SOURCES = $(wildcard ${COSIM_VERILOG_DIR}/*.sv)
+VERILOG_SOURCES = $(wildcard ${COSIM_OUTPUT_DIR}/*.sv)
 VERILOG_SOURCES += ${COSIM_VERILOG_LIBS}
 # use VHDL_SOURCES for VHDL files
 

@@ -42,7 +42,7 @@ def test(**kwargs):
         assert (mlir_file.endswith('.mlir'))
         verilog_libs = ':'.join(get_full_path(
             test_module_dir, kwargs['verilog_libs']))
-        config_file, verilog_dir = compile_mlir(mlir_file, output_dir)
+        config_file, output_dir = compile_mlir(mlir_file, output_dir)
         cocotb_env = os.environ.copy()
         if ('PYTHONPATH' not in cocotb_env):
             raise Exception('''Must set the mlir python bindings directory in PYTHONPATH environment variable. 
@@ -53,7 +53,7 @@ def test(**kwargs):
         cocotb_env['COSIM_CONFIG'] = config_file
         cocotb_env['COSIM_TESTMODULE'] = test_module
         cocotb_env['COSIM_VERILOG_TOPLEVEL'] = kwargs['top_level']
-        cocotb_env['COSIM_VERILOG_DIR'] = verilog_dir
+        cocotb_env['COSIM_OUTPUT_DIR'] = output_dir
         cocotb_env['COSIM_VERILOG_LIBS'] = verilog_libs
         cocotb_env['COSIM_NUM_CYCLES'] = str(kwargs['num_cycles'])
         if ('waveform_file' in kwargs):
@@ -69,6 +69,6 @@ def test(**kwargs):
 
     return decorator
 
-# cpuRunner = CpuRunner('build/gesummv/cpu-module.mlir')
+# cpuRunner = CpuRunner('build/gesummv/cpu-sim.mlir')
 # cpuRunner.run(arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 # print(arg6)
