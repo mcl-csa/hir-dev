@@ -106,43 +106,40 @@ class DUTWrapper:
     def keys(self):
         return self.wires.keys()
 
-    def register_var(self, name, direction, type, width):
+    def register_var(self, name, direction):
         if (not hasattr(self.dut, name)):
             raise Exception(
-                f'Trying to register variable {name}, but dut does not have any such member.')
+                f'Trying to register variable {name}, but verilog DUT does not have any such member.')
 
-        # Initial value of inputs.
-        # if (direction == 'in'):
-        #   setattr(self.dut, name, 0)
         self.wires[name] = {'direction': direction}
 
     def register_port(self, name, port_num, config, shape, elementConfig):
         addr_width = math.log2(np.prod(shape))
         data_width = elementConfig['width']
         self.register_var(
-            f"{name}_p{port_num}_addr_en", "out", "integer", 1)
+            f"{name}_p{port_num}_addr_en", "out")
         self.register_var(
-            f"{name}_p{port_num}_addr_data", "out", "integer", addr_width)
+            f"{name}_p{port_num}_addr_data", "out")
 
         if ('rd_latency' in config):
-            self.register_var(f"{name}_p{port_num}_rd_en", "out", "integer", 1)
+            self.register_var(f"{name}_p{port_num}_rd_en", "out")
             self.register_var(
-                f"{name}_p{port_num}_rd_data", "in", "integer", data_width)
+                f"{name}_p{port_num}_rd_data", "in")
 
         if ('wr_latency' in config):
-            self.register_var(f"{name}_p{port_num}_wr_en", "out", "integer", 1)
+            self.register_var(f"{name}_p{port_num}_wr_en", "out")
             self.register_var(
-                f"{name}_p{port_num}_wr_data", "out", "integer", data_width)
+                f"{name}_p{port_num}_wr_data", "out")
 
     def register_args(self):
-        self.register_var('clk', 'in', 'integer', 1)
-        self.register_var('rst', 'in', 'integer', 1)
-        self.register_var('t', 'in', 'integer', 1)
+        self.register_var('clk', 'in')
+        self.register_var('rst', 'in')
+        self.register_var('t', 'in')
 
         for arg_config in self.config['args']:
             if (arg_config['type'] == 'integer'):
                 self.register_var(
-                    arg_config['name'], 'in', 'integer', arg_config['width'])
+                    arg_config['name'], 'in')
             elif (arg_config['type'] == 'memref'):
                 for port_num, port_config in enumerate(arg_config['ports']):
                     self.register_port(
