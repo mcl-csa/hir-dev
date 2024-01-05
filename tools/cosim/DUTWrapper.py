@@ -98,10 +98,13 @@ class DUTWrapper:
         self.name = dut._name
         self.dut = dut
         self.clk = self.dut.clk
+        self.rst = self.dut.rst
         self.dut.clk.value = 1
         self.config = config[self.name]
         self.wires = {}
+        self.probes = {}
         self.register_args()
+        self.register_probes()
 
     def keys(self):
         return self.wires.keys()
@@ -130,6 +133,16 @@ class DUTWrapper:
             self.register_var(f"{name}_p{port_num}_wr_en", "out")
             self.register_var(
                 f"{name}_p{port_num}_wr_data", "out")
+
+    def register_probes(self):
+        for probe in self.config['probes']:
+            assert (hasattr(self.dut, probe["name"]))
+            signal_handle = getattr(self.dut, probe["name"])
+            valid_handle = None
+            if (hasattr(self.dut, probe["name"]+"_valid")):
+                valid_handle = getattr(self.dut, probe["name"]+"_valid")
+            self.probes[probe["id"]] = {
+                "signal": signal_handle, "valid": valid_handle}
 
     def register_args(self):
         self.register_var('clk', 'in')

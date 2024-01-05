@@ -13,14 +13,10 @@ def lowerToLLVM(module):
     return module
 
 
-@ctypes.CFUNCTYPE(None, ctypes.c_int32)
-def record(a):
-    print(f'recording: {a}')
-
-
 class CpuRunner:
     def __init__(self, mlirFile, top):
         self.topLevel = top
+        self.cpuProbeTrace = {}
         with Context(), open(mlirFile, 'r') as f:
             self.module = Module.parse(f.read())
             self.module = lowerToLLVM(self.module)
@@ -41,9 +37,18 @@ class CpuRunner:
 
         return c_args
 
+    def getRecordFunc(self):
+        @ctypes.CFUNCTYPE(None, ctypes.c_int32, ctypes.c_int32)
+        def record(value, id):
+            if (id not in self.cpuProbeTrace):
+                self.cpuProbeTrace[id] = []
+            self.cpuProbeTrace[id].append(value)
+        return record
+
     def run(self, args):
         c_args = self.getCArgs(args)
         execution_engine = ExecutionEngine(self.module)
         execution_engine.register_runtime(
-            "record", record)
+            "record", self.getRecordFunc())
         execution_engine.invoke(self.topLevel, *c_args)
+        return self.cpuProbeTrace

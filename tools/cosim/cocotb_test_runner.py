@@ -2,7 +2,8 @@ import os
 import cocotb
 import json
 import DUTWrapper
-from cocotb.triggers import Timer
+from cocotb.triggers import RisingEdge, Timer, FallingEdge
+from cocotb.utils import get_sim_time
 from cpurunner import CpuRunner
 from tensor import wrapNDArrayToTensor
 import numpy as np
@@ -44,6 +45,40 @@ def generate_module_interface(dut, args, arg_configs):
     return tasks
 
 
+async def probe_verifier(dut, expectedProbeTrace, probes):
+    await FallingEdge(dut.rst)
+    await FallingEdge(dut.rst)
+    await Timer(1, units="ns")
+    print(f'Probe verifier started at {get_sim_time("ns")}ns.')
+    while (True):
+        await RisingEdge(dut.clk)
+        await Timer(2, units="ns")
+        for probe in probes:
+            id = probe["id"]
+            name = probe["name"]
+            value = dut.probes[id]
+            if (not (value["valid"] is None)):
+                try:
+                    if (value["valid"].value == 0):
+                        continue
+                except:
+                    print(
+                        f"Error at {get_sim_time('ns')} ns: Bad value, {name}_valid = {value['signal']}")
+                    continue
+
+            expected = expectedProbeTrace[id][0]
+            if (value["valid"] is not None):
+                expectedProbeTrace[id].pop(0)
+
+            try:
+                if (value["signal"].value != expected):
+                    print(
+                        f"Error at {get_sim_time('ns')} ns: Probe {name} verilog value ({value['signal'].value.integer}!= expected({expected}))")
+            except:
+                print(
+                    f"Error at {get_sim_time('ns')} ns: Probe {name} verilog value ({value['signal'].value.binstr}!= expected({expected}))")
+
+
 @cocotb.test()
 async def cocotb_testbench(dut):
     """Calls the actual cosim testbench."""
@@ -68,7 +103,7 @@ async def cocotb_testbench(dut):
     testmodule = __import__(os.environ['COSIM_TESTMODULE'])
     toplevel = os.environ['COSIM_VERILOG_TOPLEVEL']
 
-    async def dut_verilog(args):
+    async def dut_verilog(args, cpuProbeTrace):
         args = wrapNDArrayToTensor(args)
         wrapped_dut = DUTWrapper.DUTWrapper(dut, config)
         await cocotb.start(wrapped_dut.run(8, num_cycles))
@@ -76,17 +111,18 @@ async def cocotb_testbench(dut):
             wrapped_dut, args, config[toplevel]['args'])
         for task in tasks:
             await cocotb.start(task.run(num_cycles))
+        await cocotb.start(probe_verifier(wrapped_dut, cpuProbeTrace, config[toplevel]['probes']))
         await Timer(num_cycles*8+16, units='ns')
 
     def dut_cpu(args):
         args = wrapNDArrayToTensor(args)
         runner = CpuRunner(cpu_mlir_file, toplevel)
-        runner.run(args)
+        return runner.run(args)
 
     async def wrapped_dut(*args):
         args_cpu = duplicate_args(args)
-        dut_cpu(args_cpu)
-        await dut_verilog(args)
+        cpuProbeTrace = dut_cpu(args_cpu)
+        await dut_verilog(args, cpuProbeTrace)
         check_args(args, args_cpu)
 
     await test_func(wrapped_dut)
