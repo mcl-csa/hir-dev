@@ -1,6 +1,19 @@
 from cocotb.triggers import RisingEdge, Timer
 
 
+def generate_port_interfaces(dut, args, arg_configs):
+    tasks = []
+    for value, config in zip(args, arg_configs):
+        if (config['type'] == 'integer'):
+            dut[config['name']] = value
+        if (config['type'] == 'memref'):
+            for port_config in config['ports']:
+                portInterface = PortInterface(
+                    dut, port_config, value)
+                tasks.append(portInterface)
+    return tasks
+
+
 class PortInterface:
     def __init__(self, dut, port_config, tensor):
         self.dut = dut

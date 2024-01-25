@@ -1,7 +1,7 @@
 from environment import Environment
 import cocotb
 from DUTWrapper import DUTWrapper
-from PortInterface import PortInterface
+from PortInterface import generate_port_interfaces
 from cocotb.triggers import RisingEdge, Timer, FallingEdge
 from cocotb.utils import get_sim_time
 from cpurunner import CpuRunner
@@ -9,7 +9,7 @@ from tensor import wrapNDArrayToTensor
 import numpy as np
 
 
-def duplicate_args(args):
+def clone_args(args):
     dup = []
     for arg in args:
         if isinstance(arg, np.ndarray):
@@ -18,19 +18,6 @@ def duplicate_args(args):
             raise Exception(f'Unexpected type of arg = {arg}')
         dup.append(arg)
     return dup
-
-
-def generate_module_interface(dut, args, arg_configs):
-    tasks = []
-    for value, config in zip(args, arg_configs):
-        if (config['type'] == 'integer'):
-            dut[config['name']] = value
-        if (config['type'] == 'memref'):
-            for port_config in config['ports']:
-                portInterface = PortInterface(
-                    dut, port_config, value)
-                tasks.append(portInterface)
-    return tasks
 
 
 async def probe_verifier(dut, expectedProbeTrace, probes):
@@ -76,7 +63,7 @@ async def cocotb_testbench(dut):
         args = wrapNDArrayToTensor(args)
         wrapped_dut = DUTWrapper(dut, env.config)
         await cocotb.start(wrapped_dut.run(8, env.num_cycles))
-        tasks = generate_module_interface(
+        tasks = generate_port_interfaces(
             wrapped_dut, args, env.config[env.toplevel]['args'])
         for task in tasks:
             await cocotb.start(task.run(env.num_cycles))
@@ -89,7 +76,7 @@ async def cocotb_testbench(dut):
         return runner.run(args)
 
     async def wrapped_dut(*args):
-        args_cpu = duplicate_args(args)
+        args_cpu = clone_args(args)
         cpuProbeTrace = dut_cpu(args_cpu)
         await dut_verilog(args, cpuProbeTrace)
 

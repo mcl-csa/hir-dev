@@ -14,9 +14,6 @@ class DUTWrapper:
         self.register_args()
         self.register_probes()
 
-    def keys(self):
-        return self.wires.keys()
-
     def register_var(self, name, direction):
         if (not hasattr(self.dut, name)):
             raise Exception(
