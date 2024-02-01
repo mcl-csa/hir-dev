@@ -2,7 +2,8 @@ from cocotb.triggers import RisingEdge, Timer, FallingEdge
 from cocotb.utils import get_sim_time
 
 
-async def probe_verifier(dut, expectedProbeTrace, probes):
+async def probe_verifier(dut, expectedProbeTrace, env):
+    probes = env.config[env.toplevel]['probes']
     await FallingEdge(dut.rst)
     await FallingEdge(dut.rst)
     await Timer(1, units="ns")

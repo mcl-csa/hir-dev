@@ -6,7 +6,15 @@ from DUTWrapper import DUTWrapper
 from PortInterface import generate_port_interfaces
 from cpurunner import CpuRunner
 from tensor import wrapNDArrayToTensor
+from callback_manager import callback_manager
 from verifier import probe_verifier
+
+
+async def io_manager(dut, args, env):
+    tasks = generate_port_interfaces(
+        dut, args, env.config[env.toplevel]['args'])
+    for task in tasks:
+        await cocotb.start(task.run(env.num_cycles))
 
 
 @cocotb.test()
@@ -18,11 +26,9 @@ async def cocotb_testbench(dut):
         args = wrapNDArrayToTensor(args)
         wrapped_dut = DUTWrapper(dut, env.config)
         await cocotb.start(wrapped_dut.run(8, env.num_cycles))
-        tasks = generate_port_interfaces(
-            wrapped_dut, args, env.config[env.toplevel]['args'])
-        for task in tasks:
-            await cocotb.start(task.run(env.num_cycles))
-        await cocotb.start(probe_verifier(wrapped_dut, cpu_probe_trace, env.config[env.toplevel]['probes']))
+        await cocotb.start(io_manager(wrapped_dut, args, env))
+        await cocotb.start(probe_verifier(wrapped_dut, cpu_probe_trace, env))
+        await cocotb.start(callback_manager(wrapped_dut))
         await Timer(env.num_cycles*8+16, units='ns')
 
     def dut_cpu(args):
@@ -38,7 +44,7 @@ async def cocotb_testbench(dut):
                 raise Exception('Unexpected type.')
             return arg
 
-        args_cpu = map(clone_if_array, args)
+        args_cpu = list(map(clone_if_array, args))
 
         # Run the cpu and verilog simulation.
         cpuProbeTrace = dut_cpu(args_cpu)

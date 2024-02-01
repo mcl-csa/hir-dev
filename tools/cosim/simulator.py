@@ -29,9 +29,9 @@ def test(**kwargs):
             raise Exception(
                 f"cosim test function '{func.__name__}' must be async.")
 
-        # This is the second call to test in the launched context.
-        # Return function directly.
         if ('COSIM_TESTNAME' in os.environ):
+            # This is the second call to test in the launched context.
+            # Return function directly.
             return func
 
         test_file = inspect.stack()[1].filename
@@ -68,7 +68,3 @@ def test(**kwargs):
         return func
 
     return decorator
-
-# cpuRunner = CpuRunner('build/gesummv/cpu-sim.mlir')
-# cpuRunner.run(arg0, arg1, arg2, arg3, arg4, arg5, arg6)
-# print(arg6)
