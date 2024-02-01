@@ -7,7 +7,7 @@ TOPLEVEL_LANG = verilog
 
 VERILOG_SOURCES = $(wildcard ${COSIM_OUTPUT_DIR}/*.sv)
 VERILOG_SOURCES += ${COSIM_VERILOG_LIBS}
-# use VHDL_SOURCES for VHDL files
+SIM_BUILD = ${COSIM_VERILOG_DIR}/sim_build
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL=${COSIM_VERILOG_TOPLEVEL}
