@@ -1,0 +1,1 @@
+g++ -fPIC --shared *.cpp ../lib/arith.cpp /home/kingshuk/Git_Clones/hir-dev/circt/ext/share/verilator/include/verilated.cpp -I/home/kingshuk/Git_Clones/hir-dev/circt/ext/share/verilator/include  -I../include -o dut.so

@@ -1,3 +1,2 @@
-__pycache__
-sim_build
-*.xml
+build
+a.out

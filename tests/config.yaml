@@ -1,0 +1,4 @@
+verilator: ../circt/ext/bin/verilator
+cxx_compiler: /usr/bin/g++
+circt_opt: ../circt/build/bin/circt-opt
+mlir_opt: ../circt/build/bin/mlir-opt
