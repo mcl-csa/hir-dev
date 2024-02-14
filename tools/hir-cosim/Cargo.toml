@@ -1,0 +1,13 @@
+[package]
+name = "hir-cosim"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.5.0", features = ["derive"] }
+pyo3 = { version = "0.20.2", features = ["auto-initialize"] }
+serde = "1.0.196"
+serde_derive = "1.0.196"
+toml = "0.8.10"

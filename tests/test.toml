@@ -1,0 +1,10 @@
+[dependencies]
+circt_opt = "../circt/build/bin/circt-opt"
+mlir_opt = "../circt/build/bin/mlir-opt"
+verilator = "../circt/ext/bin/verilator"
+cxx = "/usr/bin/g++"
+
+[[test]]
+top = 'gesummv'
+test_file = 'gesummv/tb_gesummv.py'
+hir_file = 'gesummv.mlir'
