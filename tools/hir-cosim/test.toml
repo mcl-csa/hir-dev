@@ -8,3 +8,4 @@ cxx = "/usr/bin/g++"
 top = 'gesummv'
 test_file = '../../tests/gesummv/tb_gesummv.py'
 hir_file = '../../tests/gesummv/gesummv.mlir'
+includes = ["../../tests/includes/helper.sv", "../../tests/includes/arith.cpp","../../tests/includes/arith.h"]
