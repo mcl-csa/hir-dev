@@ -21,6 +21,7 @@ impl Compiler {
         if !out.status.success() {
             println!("Error: {:?}", out);
         }
+
         // circt-opt --affine-to-hir --hir-opt --hir-simplify --hir-to-hw --export-split-verilog="dir-name=build/$1" build/$1/verilog-sim.mlir
         let out = Command::new(&self.circt_opt)
             .arg("--affine-to-hir")

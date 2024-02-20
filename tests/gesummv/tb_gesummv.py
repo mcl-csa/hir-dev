@@ -9,6 +9,6 @@ def test_gesummv(dut):
     B = np.reshape(np.arange(stop=64, dtype=np.int32), (8, 8))
     X = np.arange(stop=8, dtype=np.int32)
     Y = np.zeros((8), np.int32)
-    #dut(alpha, beta, temp, A, B, X, Y)
+    dut.set_sim_duration(1000)
+    dut.run(alpha, beta, temp, A, B, X, Y)
     print(f'Y={Y}')
-

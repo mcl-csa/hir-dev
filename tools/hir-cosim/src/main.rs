@@ -4,16 +4,20 @@ use std::path::PathBuf;
 use toml;
 
 pub mod config;
-pub mod hls;
-pub mod test_runner;
-pub mod verilator;
+pub mod cosim_info;
+mod hls;
+mod pydut;
+mod test_runner;
+mod verilator;
 
 use crate::config::Config;
+use crate::pydut::PyDUT;
 use crate::test_runner::run_test;
 
 fn default_config() -> String {
-    return "test.toml".to_owned();
+    "test.toml".to_owned()
 }
+
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
 pub struct Args {
@@ -31,21 +35,21 @@ fn main() {
     let mut config: Config = toml::from_str(&config_str).unwrap();
     let config_path = PathBuf::from(args.config).canonicalize().unwrap();
     config.prepend_path(config_path.parent().unwrap());
-    println!("{:#?}", config);
 
     let hls = hls::Compiler {
         circt_opt: config.dependencies.circt_opt.into(),
         mlir_opt: config.dependencies.mlir_opt.into(),
     };
-    let verilator = verilator::Compiler {
-        verilator: config.dependencies.verilator.into(),
-        cxx: config.dependencies.cxx.into(),
-    };
+
     let build_dir = "cosim_build".to_owned();
     for test in &config.test {
+        let verilator = verilator::Compiler {
+            verilator: config.dependencies.verilator.clone().into(),
+            cxx: config.dependencies.cxx.clone().into(),
+        };
         hls.compile(test, &build_dir);
-
-        verilator.compile(test, &build_dir);
-        run_test(test);
+        let dut = verilator.compile(&test, &build_dir);
+        let py_dut = PyDUT::new(dut);
+        run_test(test, py_dut);
     }
 }

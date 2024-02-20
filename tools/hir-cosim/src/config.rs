@@ -15,7 +15,7 @@ impl Config {
         }
     }
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Test {
     pub top: String,
     pub test_file: String,

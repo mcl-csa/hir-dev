@@ -1,7 +1,11 @@
 use crate::config::Test;
+use crate::cosim_info;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
+mod codegen;
+pub mod dut;
+use dut::DUT;
 
 pub struct Compiler {
     pub verilator: PathBuf,
@@ -9,7 +13,7 @@ pub struct Compiler {
 }
 
 impl Compiler {
-    pub fn compile(&self, test: &Test, sv_dir: &String) {
+    pub fn compile(&self, test: &Test, sv_dir: &String) -> DUT {
         let sv_files = glob(sv_dir, ".sv");
         let lib_sv: Vec<&String> = test
             .includes
@@ -26,6 +30,7 @@ impl Compiler {
 
         //verilator --cc $1/*.sv --top-module $1 --prefix Vtop -Mdir build  --FI arith.h
         let mut cmd = Command::new(&self.verilator);
+        cmd.arg("--trace");
         cmd.arg("--cc");
         for file in &sv_files {
             cmd.arg(file);
@@ -61,8 +66,14 @@ impl Compiler {
             .iter()
             .filter(|file| file.ends_with(".cpp"))
             .collect();
-        let include_dirs = lib_h.iter().map(|file| file.parent().unwrap());
+
+        let info = cosim_info::load(&(sv_dir.to_owned() + "/cosim.json"));
+        let top_func = info.iter().find(|f| f.name == test.top).unwrap();
+        let code = codegen::build_cpp_wrapper(top_func);
+        fs::write(sv_dir.to_owned() + "/dut.cpp", code).unwrap();
+
         //g++ -fPIC --shared *.cpp ../lib/arith.cpp /home/kingshuk/Git_Clones/hir-dev/circt/ext/share/verilator/include/verilated.cpp -I/home/kingshuk/Git_Clones/hir-dev/circt/ext/share/verilator/include  -I../include -o dut.so
+        let include_dirs = lib_h.iter().map(|file| file.parent().unwrap());
         let mut cmd = Command::new(&self.cxx);
         cmd.arg("-std=c++11");
         cmd.arg("-fPIC");
@@ -74,6 +85,7 @@ impl Compiler {
             cmd.arg(file);
         }
         cmd.arg(verilator_root.clone() + "/include/verilated.cpp");
+        cmd.arg(verilator_root.clone() + "/include/verilated_vcd_c.cpp");
         cmd.arg("-I");
         cmd.arg(verilator_root + "/include");
         for dir in include_dirs {
@@ -94,8 +106,14 @@ impl Compiler {
         if !out.status.success() {
             println!("Error: {}", String::from_utf8_lossy(&out.stderr));
         }
+
+        DUT::new(&(sv_dir.to_owned() + "/dut.dylib"), top_func.clone())
     }
 }
+
+//---------------------------------------------------------------------------//
+//--------------------Private Functions--------------------------------------//
+//---------------------------------------------------------------------------//
 
 fn glob(path: &String, file_ext: &str) -> Vec<String> {
     let mut files = Vec::new();
@@ -109,7 +127,7 @@ fn glob(path: &String, file_ext: &str) -> Vec<String> {
         }
         files.push(entry.path().to_str().unwrap().to_owned());
     }
-    return files;
+    files
 }
 
 fn get_verilator_root(verilator: &PathBuf) -> String {
@@ -123,5 +141,5 @@ fn get_verilator_root(verilator: &PathBuf) -> String {
     if verilator_root.ends_with('\n') {
         verilator_root.pop();
     }
-    return verilator_root;
+    verilator_root
 }
