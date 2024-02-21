@@ -140,3 +140,17 @@ pub fn build_cpp_wrapper(top_func: &cosim::Function) -> String {
     let code = code.join("\n");
     code
 }
+
+pub fn build_verilator_config(top_func: &cosim::Function) -> String {
+    let mut config = Vec::from(["`verilator_config\n".to_owned()]);
+    config.extend(top_func.probes.iter().map(|probe| {
+        format!(
+            r#"
+public -module "{mod}" -var "{var}"
+public -module "{mod}" -var "{var}_valid"
+            "#,
+            mod=&top_func.name, var=&probe.name
+        )
+    }));
+    config.join("\n")
+}

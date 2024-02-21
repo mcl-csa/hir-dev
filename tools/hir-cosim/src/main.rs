@@ -44,8 +44,7 @@ fn main() {
 
     let build_dir = "cosim_build".to_owned();
 
-    //FIXME:Uncomment this.
-    //_ = std::fs::remove_dir_all(&build_dir);
+    _ = std::fs::remove_dir_all(&build_dir);
 
     for test in &config.test {
         let verilator = verilator::Compiler {

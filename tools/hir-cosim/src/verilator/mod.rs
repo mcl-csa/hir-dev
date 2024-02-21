@@ -29,6 +29,12 @@ impl Compiler {
             .map(|file| -> PathBuf { file.into() })
             .collect();
 
+        let info = cosim::load(&(sv_dir.to_owned() + "/cosim.json"));
+        let top_func = info.iter().find(|f| f.name == test.top).unwrap();
+
+        let config = codegen::build_verilator_config(top_func);
+        fs::write(sv_dir.to_owned() + "/verilator.vlt", config).unwrap();
+
         //verilator --cc $1/*.sv --top-module $1 --prefix Vtop -Mdir build  --FI arith.h
         let mut cmd = Command::new(&self.verilator);
         cmd.arg("--trace");
@@ -39,7 +45,7 @@ impl Compiler {
         for file in lib_sv {
             cmd.arg(file);
         }
-        cmd.arg(sv_dir.to_owned() + "/gesummv.vlt");
+        cmd.arg(sv_dir.to_owned() + "/verilator.vlt");
         cmd.arg("--top-module");
         cmd.arg(&test.top);
         cmd.arg("--prefix");
@@ -69,8 +75,6 @@ impl Compiler {
             .filter(|file| file.ends_with(".cpp"))
             .collect();
 
-        let info = cosim::load(&(sv_dir.to_owned() + "/cosim.json"));
-        let top_func = info.iter().find(|f| f.name == test.top).unwrap();
         let code = codegen::build_cpp_wrapper(top_func);
         fs::write(sv_dir.to_owned() + "/dut.cpp", code).unwrap();
         let cpp_files = glob(sv_dir, ".cpp");
