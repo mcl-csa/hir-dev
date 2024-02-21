@@ -1,0 +1,5 @@
+`verilator_config
+
+public -module "gesummv" -var "probe_0"
+public -module "gesummv" -var "probe_1"
+public -module "gesummv" -var "probe_2"

@@ -1,11 +1,12 @@
 [dependencies]
 circt_opt = "../circt/build/bin/circt-opt"
 mlir_opt = "../circt/build/bin/mlir-opt"
-verilator = "../circt/ext/bin/verilator"
+#verilator = "../circt/ext/bin/verilator"
+verilator = "/Users/kingshuk1000/Git_Clones/hir-dev/circt/ext/bin/verilator"
 cxx = "/usr/bin/clang++"
 
 [[test]]
 top = 'gesummv'
 test_file = 'gesummv/tb_gesummv.py'
 hir_file = 'gesummv/gesummv.mlir'
-includes = ["includes/helper.sv", "includes/arith.cpp","includes/arith.h"]
+includes = ["includes/helper.sv", "includes/arith.cpp", "includes/arith.h"]

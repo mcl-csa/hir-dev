@@ -3,15 +3,16 @@ use std::fs;
 use std::path::PathBuf;
 use toml;
 
-pub mod config;
-pub mod cosim_info;
+pub mod cosim;
 mod hls;
 mod pydut;
+pub mod test;
 mod test_runner;
+mod value;
 mod verilator;
 
-use crate::config::Config;
 use crate::pydut::PyDUT;
+use crate::test::Config;
 use crate::test_runner::run_test;
 
 fn default_config() -> String {
@@ -42,6 +43,10 @@ fn main() {
     };
 
     let build_dir = "cosim_build".to_owned();
+
+    //FIXME:Uncomment this.
+    //_ = std::fs::remove_dir_all(&build_dir);
+
     for test in &config.test {
         let verilator = verilator::Compiler {
             verilator: config.dependencies.verilator.clone().into(),

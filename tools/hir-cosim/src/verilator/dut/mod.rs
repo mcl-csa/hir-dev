@@ -1,85 +1,34 @@
-use crate::cosim_info::{Arg, Function, SVArg, SVMemrefArg, SVMemrefPort};
-use libc;
+use crate::cosim;
+use crate::value;
+mod arg;
+mod probe;
 use libloading::{Library, Symbol};
-mod value;
+use std::collections::BTreeMap;
 use std::iter::zip;
-
+use std::path::PathBuf;
 pub use value::Value;
+
+use arg::DUTArg;
+use probe::DUTProbe;
 
 type UnsafeVoidPtr = *mut libc::c_void;
 type GetType<'lib> = Symbol<'lib, extern "C" fn(UnsafeVoidPtr) -> u64>;
 type SetType<'lib> = Symbol<'lib, extern "C" fn(UnsafeVoidPtr, u64)>;
-
-pub struct SimpleDUTArg<'lib> {
-    pub name: String,
-    set: SetType<'lib>,
-}
-
-impl<'lib> SimpleDUTArg<'lib> {
-    fn update(&self, p: UnsafeVoidPtr, value: &Value) {
-        (self.set)(p, value.get());
-    }
-}
-
-struct MemReadOp {
-    time: u32,
-    addr: u32,
-}
-struct MemWriteOp {
-    time: u32,
-    addr: u32,
-    value: u64,
-}
-
-enum MemOp {
-    Rd(MemReadOp),
-    Wr(MemWriteOp),
-}
-
-struct PortOfMemDUTArg<'lib> {
-    operations: Vec<MemOp>,
-    rd_latency: u32,
-    wr_latency: u32,
-    get_addr_en: Option<GetType<'lib>>,
-    get_addr_data: Option<GetType<'lib>>,
-    get_rd_en: Option<GetType<'lib>>,
-    set_rd_data: Option<SetType<'lib>>,
-    get_wr_en: Option<GetType<'lib>>,
-    get_wr_data: Option<GetType<'lib>>,
-}
-
-pub struct MemDUTArg<'lib> {
-    pub name: String,
-    ports: Vec<PortOfMemDUTArg<'lib>>,
-}
-
-impl<'lib> MemDUTArg<'lib> {
-    fn after_posedge(&mut self, p: UnsafeVoidPtr, value: &mut Value, time: u32) {
-        for port in &mut self.ports {
-            after_posedge(p, port, value, time);
-        }
-    }
-}
-
-pub enum DUTArg<'lib> {
-    Simple(SimpleDUTArg<'lib>),
-    Mem(MemDUTArg<'lib>),
-}
-
 pub struct DUT {
     lib: Library,
-    func: Function,
+    func: cosim::Function,
 }
 
 impl DUT {
-    pub fn new(dyn_lib: &str, func: Function) -> DUT {
+    pub fn new(lib_path: &str, func: cosim::Function) -> DUT {
+        assert!(PathBuf::from(lib_path).exists());
         DUT {
-            lib: unsafe { Library::new(dyn_lib).unwrap() },
+            lib: unsafe { Library::new(lib_path).unwrap() },
             func,
         }
     }
 
-    pub fn run(&self, values: &mut Vec<Value>, ncycles: u32) {
+    pub fn run(&self, values: &mut Vec<Value>, ncycles: u32) -> BTreeMap<String, Vec<u64>> {
         let (vtop, trace) = init(&self.lib);
         let tick = unsafe {
             self.lib
@@ -101,7 +50,20 @@ impl DUT {
                 .get::<extern "C" fn(UnsafeVoidPtr, u32)>(b"set_t")
                 .unwrap()
         };
-        let mut dut_args = self.get_dut_args();
+
+        let mut dut_args: Vec<DUTArg> = self
+            .func
+            .args
+            .iter()
+            .map(|arg_info| DUTArg::new(&self.lib, arg_info))
+            .collect();
+
+        let dut_probes: Vec<DUTProbe> = self
+            .func
+            .probes
+            .iter()
+            .map(|probe_info| DUTProbe::new(&self.lib, probe_info))
+            .collect();
 
         assert!(dut_args.len() == values.len());
         for (arg, value) in zip(dut_args.iter(), values.iter_mut()) {
@@ -110,6 +72,13 @@ impl DUT {
                 _ => (),
             }
         }
+
+        let mut probe_trace = BTreeMap::<String, Vec<u64>>::from_iter(
+            self.func
+                .probes
+                .iter()
+                .map(|probe_info| (probe_info.name.clone(), Vec::<u64>::new())),
+        );
 
         for time in 0..2 * ncycles {
             let clk = time % 2;
@@ -124,69 +93,38 @@ impl DUT {
 
             //If positive edge (clk=1), update the memory buses.
             if clk == 1 {
-                for (arg, value) in zip(dut_args.iter_mut(), values.iter_mut()) {
-                    match arg {
-                        DUTArg::Simple(_) => (),
-                        DUTArg::Mem(m) => m.after_posedge(vtop, value, time),
+                for ((arg, info), value) in zip(
+                    zip(dut_args.iter_mut(), self.func.args.iter()),
+                    values.iter_mut(),
+                ) {
+                    match (arg, info) {
+                        (DUTArg::Simple(_), _) => (),
+                        (DUTArg::Mem(m), cosim::ArgInfo::Memref(mem_info)) => {
+                            m.after_posedge(vtop, value, mem_info)
+                        }
+                        _ => (),
                     }
                 }
+
+                dut_probes
+                    .iter()
+                    .filter(|probe| probe.is_valid(vtop))
+                    .for_each(|probe| {
+                        probe_trace
+                            .get_mut(&probe.name)
+                            .unwrap()
+                            .push(probe.get_data(vtop));
+                    });
             }
         }
 
         deinit(&self.lib, vtop, trace);
+        probe_trace
     }
 
-    pub fn get_args(&self) -> &Vec<Arg> {
+    pub fn get_args(&self) -> &Vec<cosim::ArgInfo> {
         &self.func.args
     }
-
-    pub fn get_dut_args(&self) -> Vec<DUTArg> {
-        self.func
-            .get_sv_args()
-            .iter()
-            .map(|sv_arg| match sv_arg {
-                SVArg::Int(v) => DUTArg::Simple(SimpleDUTArg {
-                    name: v.name.clone(),
-                    set: setter(&self.lib, &v.name),
-                }),
-                SVArg::Float(v) => DUTArg::Simple(SimpleDUTArg {
-                    name: v.name.clone(),
-                    set: setter(&self.lib, &v.name),
-                }),
-                SVArg::Memref(v) => DUTArg::Mem(build_mem_arg(&self.lib, &v)),
-            })
-            .collect()
-    }
-}
-
-fn getter<'lib>(lib: &'lib Library, vname: &str) -> GetType<'lib> {
-    unsafe {
-        lib.get::<extern "C" fn(UnsafeVoidPtr) -> u64>(format!("get_{vname}").as_bytes())
-            .unwrap()
-    }
-}
-
-fn setter<'lib>(lib: &'lib Library, vname: &str) -> SetType<'lib> {
-    unsafe {
-        lib.get::<extern "C" fn(UnsafeVoidPtr, u64)>(format!("set_{vname}").as_bytes())
-            .unwrap()
-    }
-}
-
-fn build_mem_arg<'lib>(lib: &'lib Library, sv_mem: &SVMemrefArg) -> MemDUTArg<'lib> {
-    MemDUTArg {
-        name: sv_mem.name.clone(),
-        ports: sv_mem
-            .ports
-            .iter()
-            .map(|sv_port| build_mem_port(lib, sv_port))
-            .collect(), //FIXME: map ports correctly.
-    }
-}
-
-fn build_mem_port<'lib>(lib: &'lib Library, sv_port: &SVMemrefPort) -> PortOfMemDUTArg<'lib> {}
-fn after_posedge(p: UnsafeVoidPtr, port: &mut PortOfMemDUTArg, arr: &mut Value, time: u32) {
-    arr.set_mem(0, 23)
 }
 
 fn init(lib: &Library) -> (UnsafeVoidPtr, UnsafeVoidPtr) {

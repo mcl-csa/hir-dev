@@ -1,4 +1,4 @@
-use crate::cosim_info::Arg;
+use crate::cosim::ArgInfo;
 use crate::verilator::dut::Value;
 use crate::verilator::dut::DUT;
 use numpy::PyReadwriteArrayDyn;
@@ -49,20 +49,21 @@ impl PyDUT {
                 }
             })
             .collect();
-        self.dut.run(&mut values, self.ncycles);
+        let hw_probe_traces = self.dut.run(&mut values, self.ncycles);
+        dbg!(hw_probe_traces);
     }
 }
 
 fn get_arg_values<'py>(
-    formal_args: &Vec<Arg>,
+    formal_args: &Vec<ArgInfo>,
     py_args: &'py mut Vec<PyType>,
 ) -> Vec<Result<Value<'py>, ()>> {
     assert!(formal_args.len() == py_args.len());
     zip(formal_args, py_args)
         .map(|(sv_arg, py_arg)| match (sv_arg, py_arg) {
-            (Arg::Int(_), PyType::I32(v)) => Ok(Value::I32(*v)),
-            (Arg::Float(_), PyType::F32(v)) => Ok(Value::F32(*v)),
-            (Arg::Memref(_), PyType::ArrayOfInt(v)) => {
+            (ArgInfo::Int(_), PyType::I32(v)) => Ok(Value::I32(*v)),
+            (ArgInfo::Float(_), PyType::F32(v)) => Ok(Value::F32(*v)),
+            (ArgInfo::Memref(_), PyType::ArrayOfInt(v)) => {
                 Ok(Value::ArrayOfI32(v.as_slice_mut().unwrap()))
             }
             _ => Err(()),

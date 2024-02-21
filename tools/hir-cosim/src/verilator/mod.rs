@@ -1,10 +1,11 @@
-use crate::config::Test;
-use crate::cosim_info;
+use crate::cosim;
+use crate::test::Test;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 mod codegen;
 pub mod dut;
+pub mod sv;
 use dut::DUT;
 
 pub struct Compiler {
@@ -38,6 +39,7 @@ impl Compiler {
         for file in lib_sv {
             cmd.arg(file);
         }
+        cmd.arg(sv_dir.to_owned() + "/gesummv.vlt");
         cmd.arg("--top-module");
         cmd.arg(&test.top);
         cmd.arg("--prefix");
@@ -57,20 +59,21 @@ impl Compiler {
         cmd.arg("--xml-only");
         let out = cmd.output().unwrap();
         if !out.status.success() {
-            println!("Error: {:?}", out);
+            panic!("{}", String::from_utf8_lossy(&out.stderr));
         }
+
         let verilator_root = get_verilator_root(&self.verilator);
-        let cpp_files = glob(sv_dir, ".cpp");
         let lib_cpp: Vec<&String> = test
             .includes
             .iter()
             .filter(|file| file.ends_with(".cpp"))
             .collect();
 
-        let info = cosim_info::load(&(sv_dir.to_owned() + "/cosim.json"));
+        let info = cosim::load(&(sv_dir.to_owned() + "/cosim.json"));
         let top_func = info.iter().find(|f| f.name == test.top).unwrap();
         let code = codegen::build_cpp_wrapper(top_func);
         fs::write(sv_dir.to_owned() + "/dut.cpp", code).unwrap();
+        let cpp_files = glob(sv_dir, ".cpp");
 
         //g++ -fPIC --shared *.cpp ../lib/arith.cpp /home/kingshuk/Git_Clones/hir-dev/circt/ext/share/verilator/include/verilated.cpp -I/home/kingshuk/Git_Clones/hir-dev/circt/ext/share/verilator/include  -I../include -o dut.so
         let include_dirs = lib_h.iter().map(|file| file.parent().unwrap());
@@ -87,7 +90,9 @@ impl Compiler {
         cmd.arg(verilator_root.clone() + "/include/verilated.cpp");
         cmd.arg(verilator_root.clone() + "/include/verilated_vcd_c.cpp");
         cmd.arg("-I");
-        cmd.arg(verilator_root + "/include");
+        cmd.arg(verilator_root.clone() + "/include");
+        cmd.arg("-I");
+        cmd.arg(verilator_root + "/include/vltstd");
         for dir in include_dirs {
             cmd.arg("-I");
             cmd.arg(dir);

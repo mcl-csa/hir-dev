@@ -1,4 +1,4 @@
-use crate::config::Test;
+use crate::test::Test;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;

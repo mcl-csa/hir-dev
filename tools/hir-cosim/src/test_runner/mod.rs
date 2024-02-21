@@ -1,4 +1,4 @@
-use crate::config::Test;
+use crate::test::Test;
 use crate::PyDUT;
 use pyo3::prelude::*;
 use pyo3::types::*;
