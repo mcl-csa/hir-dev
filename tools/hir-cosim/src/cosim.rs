@@ -21,6 +21,16 @@ pub enum ArgInfo {
     Memref(MemrefArgInfo),
 }
 
+impl ArgInfo {
+    pub fn get_name(&self) -> &str {
+        match self {
+            Self::Int(info) => &info.name,
+            Self::Float(info) => &info.name,
+            Self::Memref(info) => &info.name,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProbeInfo {
     pub id: u32,
@@ -89,6 +99,12 @@ impl Element {
         match self {
             Element::Int(w) => *w,
             Element::Float(w) => *w,
+        }
+    }
+    pub fn get_numpy_type_str(&self) -> String {
+        match self {
+            Element::Int(_) => "int32".to_owned(),
+            Element::Float(_) => "float32".to_owned(),
         }
     }
 }

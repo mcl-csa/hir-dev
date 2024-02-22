@@ -10,6 +10,7 @@ clap = { version = "4.5.0", features = ["derive"] }
 libc = "0.2.153"
 libloading = "0.8.1"
 numpy = "0.20.0"
+ordinal = "0.3.2"
 pyo3 = { version = "0.20.2", features = ["auto-initialize"] }
 serde = "1.0.196"
 serde_derive = "1.0.196"

@@ -122,7 +122,7 @@ impl DUT {
         probe_trace
     }
 
-    pub fn get_args(&self) -> &Vec<cosim::ArgInfo> {
+    pub fn get_arg_infos(&self) -> &Vec<cosim::ArgInfo> {
         &self.func.args
     }
 }

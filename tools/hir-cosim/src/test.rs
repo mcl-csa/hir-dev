@@ -57,12 +57,11 @@ impl Dependencies {
 //---------------------------------------------------------------------------//
 
 fn join_path(path1: &Path, path2: &String) -> String {
-    let mut circt_path = path1.to_path_buf();
-    circt_path.push(path2);
-    circt_path
-        .canonicalize()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_owned()
+    let mut path1 = path1.to_path_buf();
+    path1.push(path2);
+    let path = path1.canonicalize();
+    match path {
+        Ok(p) => p.to_str().unwrap().to_owned(),
+        Err(_) => panic!("Bad path: {:?}", path1.to_str()),
+    }
 }
