@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def test_gesummv(dut):
     alpha = 1
     beta = 2

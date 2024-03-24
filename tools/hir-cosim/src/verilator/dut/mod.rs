@@ -2,8 +2,8 @@ use crate::cosim;
 use crate::value;
 mod arg;
 mod probe;
+use indexmap::IndexMap;
 use libloading::{Library, Symbol};
-use std::collections::BTreeMap;
 use std::iter::zip;
 use std::path::PathBuf;
 pub use value::Value;
@@ -28,7 +28,7 @@ impl DUT {
         }
     }
 
-    pub fn run(&self, values: &mut Vec<Value>, ncycles: u32) -> BTreeMap<String, Vec<u64>> {
+    pub fn run(&self, values: &mut Vec<Value>, ncycles: u32) -> IndexMap<String, Vec<u64>> {
         let (vtop, trace) = init(&self.lib);
         let tick = unsafe {
             self.lib
@@ -73,23 +73,23 @@ impl DUT {
             }
         }
 
-        let mut probe_trace = BTreeMap::<String, Vec<u64>>::from_iter(
+        let mut probe_trace = IndexMap::<String, Vec<u64>>::from_iter(
             self.func
                 .probes
                 .iter()
                 .map(|probe_info| (probe_info.name.clone(), Vec::<u64>::new())),
         );
 
-        for time in 0..2 * ncycles {
-            let clk = time % 2;
-            let rst = if 1 <= time && time <= 2 { 1 } else { 0 };
-            let t = if 15 <= time && time <= 16 { 1 } else { 0 };
+        for n in 0..2 * ncycles {
+            let clk = n % 2;
+            let rst = if 1 <= n && n <= 2 { 1 } else { 0 };
+            let t = if 15 <= n && n <= 16 { 1 } else { 0 };
 
             set_clk(vtop, clk);
             set_rst(vtop, rst);
             set_t(vtop, t);
-
-            tick(vtop, trace, time);
+            let sim_time = n * 10;
+            tick(vtop, trace, sim_time);
 
             //If positive edge (clk=1), update the memory buses.
             if clk == 1 {
@@ -106,6 +106,7 @@ impl DUT {
                     }
                 }
 
+                tick(vtop, trace, sim_time + 1);
                 dut_probes
                     .iter()
                     .filter(|probe| probe.is_valid(vtop))

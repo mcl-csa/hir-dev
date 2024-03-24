@@ -1,8 +1,13 @@
 use crate::cosim::ArgInfo;
 use crate::cosim::Element;
+use crate::cosim::Function;
 use crate::cosim::MemrefArgInfo;
-use crate::verilator::dut::Value;
-use crate::verilator::dut::DUT;
+use crate::cpu;
+use crate::value::{decode_to_f32, Value};
+use crate::verilator;
+use comfy_table::presets::UTF8_FULL;
+use comfy_table::*;
+use indexmap::IndexMap;
 use numpy::PyReadwriteArrayDyn;
 use ordinal::Ordinal;
 use pyo3::exceptions::PyTypeError;
@@ -32,14 +37,73 @@ impl<'py> PyType<'py> {
 
 #[pyclass]
 pub struct PyDUT {
-    dut: DUT,
+    verilog_dut: verilator::DUT,
+    cpu_dut: cpu::DUT,
     ncycles: u32,
 }
 
 impl PyDUT {
-    pub fn new(dut: DUT) -> Self {
-        Self { dut, ncycles: 0 }
+    pub fn new(verilog_dut: verilator::DUT, cpu_dut: cpu::DUT) -> Self {
+        Self {
+            verilog_dut,
+            cpu_dut,
+            ncycles: 0,
+        }
     }
+}
+
+fn print_probe_diff(sw: &[String], hw: &[String]) {
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        //.set_width(80)
+        .set_header(vec![
+            Cell::new("Software").add_attribute(Attribute::Bold),
+            Cell::new("Hardware").add_attribute(Attribute::Bold),
+        ]);
+    sw.iter().zip(hw.iter()).for_each(|(sval, hval)| {
+        table.add_row(vec![
+            Cell::new(sval)
+                .bg(Color::Rgb { r: 0, g: 128, b: 0 })
+                .add_attribute(Attribute::Bold),
+            Cell::new(hval)
+                .bg(Color::Rgb { r: 128, g: 0, b: 0 })
+                .add_attribute(Attribute::Bold),
+        ]);
+    });
+    println!("{table}");
+}
+
+fn to_string(v: u64, typ: &str) -> String {
+    if typ == "float" {
+        return format!("{}", decode_to_f32(v));
+    } else {
+        return format!("{}", v);
+    }
+}
+fn compare_probes(hw: IndexMap<String, Vec<u64>>, sw: IndexMap<String, Vec<u64>>, func: &Function) {
+    func.probes.iter().for_each(|probe| {
+        let hw_value = hw.get(&probe.name).unwrap();
+        let sw_value = sw.get(&probe.name).unwrap();
+        if hw_value != sw_value {
+            let hw_value: Vec<String> = hw_value
+                .iter()
+                .take(8)
+                .map(|v| to_string(*v, &probe.typ))
+                .collect();
+            let sw_value: Vec<String> = sw_value
+                .iter()
+                .take(8)
+                .map(|v| to_string(*v, &probe.typ))
+                .collect();
+
+            println!("{}:{} Mismatched", probe.name, probe.typ);
+            print_probe_diff(&sw_value, &hw_value)
+        } else {
+            println!("{}:{} Matching", probe.name, probe.typ);
+        }
+    });
 }
 
 #[pymethods]
@@ -50,12 +114,13 @@ impl PyDUT {
 
     ///Called from python testbench to run the dut using verilator.
     #[pyo3(signature = (*py_args))]
-    pub fn run(&self, py_args: &PyTuple) -> PyResult<()> {
+    pub fn run(&mut self, py_args: &PyTuple) -> PyResult<()> {
         assert!(self.ncycles > 0);
-        let mut py_args = extract_from_pytuple(py_args, self.dut.get_arg_infos())?;
+        let mut py_args = extract_from_pytuple(py_args, self.verilog_dut.get_arg_infos())?;
         let mut values = get_arg_values(&mut py_args);
-        let hw_probe_traces = self.dut.run(&mut values, self.ncycles);
-        dbg!(hw_probe_traces);
+        let hw_probes = self.verilog_dut.run(&mut values, self.ncycles);
+        let sw_probes = self.cpu_dut.run(&mut values);
+        compare_probes(hw_probes, sw_probes, &self.cpu_dut.func);
         Ok(())
     }
 }

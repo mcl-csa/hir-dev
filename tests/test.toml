@@ -1,11 +1,25 @@
 [dependencies]
 circt_opt = "../circt/build/bin/circt-opt"
 mlir_opt = "../circt/build/bin/mlir-opt"
+mlir_translate = "../circt/build/bin/mlir-translate"
 verilator = "../circt/ext/bin/verilator"
 cxx = "/usr/bin/clang++"
+llc = "../circt/build/bin/llc"
+
+#[[test]]
+#top = 'gesummv'
+#test_file = 'gesummv/tb_gesummv.py'
+#hir_file = 'gesummv/gesummv.mlir'
+#includes = ["includes/helper.sv", "includes/arith.cpp", "includes/arith.h"]
 
 [[test]]
-top = 'gesummv'
-test_file = 'gesummv/tb_gesummv.py'
-hir_file = 'gesummv/gesummv.mlir'
-includes = ["includes/helper.sv", "includes/arith.cpp", "includes/arith.h"]
+top = 'unsharp_mask'
+test_file = 'unsharp_mask/tb_unsharp_mask.py'
+hir_file = 'unsharp_mask/unsharp_mask.mlir'
+includes = [
+    "includes/helper.sv",
+    "includes/fp.sv",
+    "includes/xil_primitives.sv",
+    "includes/arith.cpp",
+    "includes/arith.h",
+]

@@ -3,20 +3,20 @@
   //`default_nettype none
   module reg_r0_w1 #(
     ELEMENT_WIDTH=64'd1
-  ) (	
-    input wire p0_rd_en,   
+  ) (
+    input wire p0_rd_en,
     output wire[ELEMENT_WIDTH-1:0] p0_rd_data ,
-    input wire p1_wr_en,   
-    input wire[ELEMENT_WIDTH-1:0] p1_wr_data, 
+    input wire p1_wr_en,
+    input wire[ELEMENT_WIDTH-1:0] p1_wr_data,
     input wire t,
-    input wire clk,   
-    input wire rst   
-  ); 
+    input wire clk,
+    input wire rst
+  );
     reg[ELEMENT_WIDTH-1:0] register=0;
     always @(posedge clk)begin
       if(rst) begin
         register <= 0;
-      end 
+      end
       else if(p1_wr_en) begin
         register <= p1_wr_data;
       end
@@ -26,8 +26,8 @@
 
   module i32mult_dsp48(p, a, b, t, clk,rst);
     output wire[32 - 1 : 0] p;//2 cycle delay.
-    input wire[32 - 1 : 0] a; 
-    input wire[32 - 1 : 0] b; 
+    input wire[32 - 1 : 0] a;
+    input wire[32 - 1 : 0] b;
     input wire t;
     input wire clk;
     input wire rst;
@@ -59,8 +59,8 @@
   endmodule
 
   module readTimeVar(
-    output wire tout, 
-    input wire tin, 
+    output wire tout,
+    input wire tin,
     input wire t,
     input wire clk
   );
@@ -190,12 +190,13 @@
   endmodule
 
   module extsi_i1_i32  (	// unsharp_mask_hir.mlir:231:15
-    input wire a,   
-    input wire t,   
-    input wire clk, 
-    input wire rst, 
-    output wire[31:0] out 
+    input wire a,
+    input wire t,
+    input wire clk,
+    input wire rst,
+    output wire[31:0] out
   );
     assign out = {31'b0,a};
   endmodule
+
 `endif

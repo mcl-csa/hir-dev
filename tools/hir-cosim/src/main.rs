@@ -4,6 +4,7 @@ use std::path::PathBuf;
 use toml;
 
 pub mod cosim;
+mod cpu;
 mod hls;
 mod pydut;
 pub mod test;
@@ -39,7 +40,14 @@ fn main() {
 
     let hls = hls::Compiler {
         circt_opt: config.dependencies.circt_opt.into(),
+        mlir_opt: config.dependencies.mlir_opt.clone().into(),
+    };
+
+    let cpu = cpu::Compiler {
         mlir_opt: config.dependencies.mlir_opt.into(),
+        mlir_translate: config.dependencies.mlir_translate.into(),
+        llc: config.dependencies.llc.into(),
+        cxx: config.dependencies.cxx.clone().into(),
     };
 
     let build_dir = "cosim_build".to_owned();
@@ -52,8 +60,9 @@ fn main() {
             cxx: config.dependencies.cxx.clone().into(),
         };
         hls.compile(test, &build_dir);
-        let dut = verilator.compile(&test, &build_dir);
-        let py_dut = PyDUT::new(dut);
+        let verilog_dut = verilator.compile(&test, &build_dir);
+        let cpu_dut = cpu.compile(test, &build_dir);
+        let py_dut = PyDUT::new(verilog_dut, cpu_dut);
         run_test(test, py_dut);
     }
 }

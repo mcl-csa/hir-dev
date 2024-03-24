@@ -39,16 +39,20 @@ impl Test {
 pub struct Dependencies {
     pub circt_opt: String,
     pub mlir_opt: String,
+    pub mlir_translate: String,
     pub verilator: String,
     pub cxx: String,
+    pub llc: String,
 }
 
 impl Dependencies {
     fn prepend_path(&mut self, path: &Path) {
         self.circt_opt = join_path(path, &self.circt_opt);
         self.mlir_opt = join_path(path, &self.mlir_opt);
+        self.mlir_translate = join_path(path, &self.mlir_translate);
         self.verilator = join_path(path, &self.verilator);
         self.cxx = join_path(path, &self.cxx);
+        self.llc = join_path(path, &self.llc);
     }
 }
 

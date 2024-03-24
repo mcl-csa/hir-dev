@@ -35,6 +35,7 @@ impl ArgInfo {
 pub struct ProbeInfo {
     pub id: u32,
     pub name: String,
+    pub typ: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

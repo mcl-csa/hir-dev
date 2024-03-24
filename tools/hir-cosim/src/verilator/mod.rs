@@ -6,7 +6,7 @@ use std::{env, fs};
 mod codegen;
 pub mod dut;
 pub mod sv;
-use dut::DUT;
+pub use dut::DUT;
 
 pub struct Compiler {
     pub verilator: PathBuf,
@@ -59,13 +59,13 @@ impl Compiler {
 
         let out = cmd.output().unwrap();
         if !out.status.success() {
-            println!("Error: {:?}", out);
+            panic!("cmd:{:#?}\n\n{}", cmd, String::from_utf8_lossy(&out.stderr));
         }
 
         cmd.arg("--xml-only");
         let out = cmd.output().unwrap();
         if !out.status.success() {
-            panic!("{}", String::from_utf8_lossy(&out.stderr));
+            panic!("cmd:{:#?}\n\n{}", cmd, String::from_utf8_lossy(&out.stderr));
         }
 
         let verilator_root = get_verilator_root(&self.verilator);
@@ -103,20 +103,24 @@ impl Compiler {
         }
 
         cmd.arg("-o");
-        if env::consts::OS == "linux" {
-            cmd.arg(sv_dir.to_owned() + "/dut.so");
+        let lib_name = if env::consts::OS == "linux" {
+            sv_dir.to_owned() + "/verilog_dut.so"
         } else if env::consts::OS == "macos" {
-            cmd.arg(sv_dir.to_owned() + "/dut.dylib");
+            sv_dir.to_owned() + "/verilog_dut.dylib"
         } else if env::consts::OS == "windows" {
-            cmd.arg(sv_dir.to_owned() + "/dut.dll");
-        }
+            sv_dir.to_owned() + "/verilog_dut.dll"
+        } else {
+            panic!("unknown OS.");
+        };
+
+        cmd.arg(&lib_name);
 
         let out = cmd.output().unwrap();
         if !out.status.success() {
-            println!("Error: {}", String::from_utf8_lossy(&out.stderr));
+            panic!("cmd:{:#?}\n\n{}", cmd, String::from_utf8_lossy(&out.stderr));
         }
 
-        DUT::new(&(sv_dir.to_owned() + "/dut.dylib"), top_func.clone())
+        DUT::new(&lib_name, top_func.clone())
     }
 }
 

@@ -33,7 +33,7 @@ impl<'py> Value<'py> {
     }
 }
 
-fn encode_i32(v: i32) -> u64 {
+pub fn encode_i32(v: i32) -> u64 {
     unsafe { mem::transmute::<i64, u64>(v.into()) }
 }
 
@@ -45,6 +45,6 @@ fn decode_to_i32(v: u64) -> i32 {
     unsafe { mem::transmute::<u32, i32>(v.try_into().unwrap()) }
 }
 
-fn decode_to_f32(v: u64) -> f32 {
+pub fn decode_to_f32(v: u64) -> f32 {
     f32::from_bits(v.try_into().unwrap())
 }
