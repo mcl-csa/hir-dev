@@ -34,7 +34,7 @@ impl<'py> Value<'py> {
 }
 
 pub fn encode_i32(v: i32) -> u64 {
-    unsafe { mem::transmute::<i64, u64>(v.into()) }
+    unsafe { mem::transmute::<i32, u32>(v).into() }
 }
 
 fn encode_f32(v: f32) -> u64 {

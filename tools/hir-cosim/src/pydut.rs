@@ -3,7 +3,7 @@ use crate::cosim::Element;
 use crate::cosim::Function;
 use crate::cosim::MemrefArgInfo;
 use crate::cpu;
-use crate::value::{decode_to_f32, Value};
+use crate::value::Value;
 use crate::verilator;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::*;
@@ -52,7 +52,7 @@ impl PyDUT {
     }
 }
 
-fn print_probe_diff(sw: &[String], hw: &[String]) {
+fn print_probe_diff(sw: &[Result<String, String>], hw: &[Result<String, String>]) {
     let mut table = Table::new();
     table
         .load_preset(UTF8_FULL)
@@ -63,23 +63,35 @@ fn print_probe_diff(sw: &[String], hw: &[String]) {
             Cell::new("Hardware").add_attribute(Attribute::Bold),
         ]);
     sw.iter().zip(hw.iter()).for_each(|(sval, hval)| {
-        table.add_row(vec![
-            Cell::new(sval)
+        let sw_cell = match sval {
+            Ok(s) => Cell::new(s)
                 .bg(Color::Rgb { r: 0, g: 128, b: 0 })
                 .add_attribute(Attribute::Bold),
-            Cell::new(hval)
+            Err(s) => Cell::new(s)
+                .bg(Color::DarkGrey)
+                .add_attribute(Attribute::Bold),
+        };
+        let hw_cell = match hval {
+            Ok(s) => Cell::new(s)
                 .bg(Color::Rgb { r: 128, g: 0, b: 0 })
                 .add_attribute(Attribute::Bold),
-        ]);
+            Err(s) => Cell::new(s)
+                .bg(Color::DarkGrey)
+                .add_attribute(Attribute::Bold),
+        };
+        table.add_row(vec![sw_cell, hw_cell]);
     });
     println!("{table}");
 }
 
-fn to_string(v: u64, typ: &str) -> String {
+fn probe_str(v: u64, typ: &str) -> Result<String, String> {
     if typ == "float" {
-        return format!("{}", decode_to_f32(v));
+        match v.try_into() {
+            Ok(v) => Ok(format!("{}", f32::from_bits(v))),
+            Err(_) => Err(format!("{v:#b}")),
+        }
     } else {
-        return format!("{}", v);
+        Ok(format!("{}", v))
     }
 }
 fn compare_probes(hw: IndexMap<String, Vec<u64>>, sw: IndexMap<String, Vec<u64>>, func: &Function) {
@@ -87,15 +99,15 @@ fn compare_probes(hw: IndexMap<String, Vec<u64>>, sw: IndexMap<String, Vec<u64>>
         let hw_value = hw.get(&probe.name).unwrap();
         let sw_value = sw.get(&probe.name).unwrap();
         if hw_value != sw_value {
-            let hw_value: Vec<String> = hw_value
+            let hw_value: Vec<Result<String, String>> = hw_value
                 .iter()
                 .take(8)
-                .map(|v| to_string(*v, &probe.typ))
+                .map(|v| probe_str(*v, &probe.typ))
                 .collect();
-            let sw_value: Vec<String> = sw_value
+            let sw_value: Vec<Result<String, String>> = sw_value
                 .iter()
                 .take(8)
-                .map(|v| to_string(*v, &probe.typ))
+                .map(|v| probe_str(*v, &probe.typ))
                 .collect();
 
             println!("{}:{} Mismatched", probe.name, probe.typ);
