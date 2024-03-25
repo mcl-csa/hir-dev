@@ -25,7 +25,10 @@ impl Compiler {
         // circt-opt --affine-to-hir  build/verilog-sim.mlir >build/hir.mlir
         let mut cmd = Command::new(&self.circt_opt);
         cmd.arg("--affine-to-hir")
-            .arg(build_dir.to_owned() + "/verilog-sim.mlir");
+            .arg("--sccp")
+            .arg("--cse")
+            .arg("--canonicalize")
+        .arg(build_dir.to_owned() + "/verilog-sim.mlir");
 
         let out = cmd.output().unwrap();
         if !out.status.success() {

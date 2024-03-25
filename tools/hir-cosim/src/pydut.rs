@@ -110,10 +110,8 @@ fn compare_probes(hw: IndexMap<String, Vec<u64>>, sw: IndexMap<String, Vec<u64>>
                 .map(|v| probe_str(*v, &probe.typ))
                 .collect();
 
-            println!("{}:{} Mismatched", probe.name, probe.typ);
-            print_probe_diff(&sw_value, &hw_value)
-        } else {
-            println!("{}:{} Matching", probe.name, probe.typ);
+            println!("\n{}:{} Mismatched", probe.name, probe.typ);
+            print_probe_diff(&sw_value, &hw_value);
         }
     });
 }
